@@ -3,14 +3,6 @@
 #include <math.h>
 #include "matrix.h"
 
-void m_scale(matrix *m, double scale) {
-    for (int i = 0; i < m->Nrows; i++) {
-        for (int j = 0; j < m->Ncols; j++) {
-            m->values[i][j] *= scale;
-        }
-    }
-}
-
 char* m_to_string(matrix *m) {
     int buf_size = m->Nrows * m->Ncols * 10 + m->Nrows * 5 + 10;
     char *result = malloc(buf_size);
@@ -23,7 +15,7 @@ char* m_to_string(matrix *m) {
     for (Index i = 0; i < m->Nrows; i++) {
         ptr += sprintf(ptr, "  [");
         for (Index j = 0; j < m->Ncols; j++) {
-            ptr += sprintf(ptr, "%.2f", m->values[i][j]);  // Format to 2 decimal places
+            ptr += sprintf(ptr, "%.4f", m->values[i][j]);  // Format to 2 decimal places
             if (j < m->Ncols - 1) {
                 ptr += sprintf(ptr, ", ");
             }
@@ -100,7 +92,7 @@ double* r_sub(double *row1, double *row2, int size) {
     return row3;
 }
 
-matrix* m_create(Index rows, Index cols, double *data[]) {
+matrix* m_create(Index rows, Index cols, double **data) {
     matrix *m = malloc(sizeof(matrix));
 
     m->Nrows = rows;
@@ -125,12 +117,36 @@ matrix* m_create(Index rows, Index cols, double *data[]) {
     return m;
 }
 
+matrix* m_scale(matrix *m, double scale) {
+    matrix* m_return = m_create(m->Nrows, m->Ncols, NULL);
+    
+    for (int i = 0; i < m->Nrows; i++) {
+        for (int j = 0; j < m->Ncols; j++) {
+            m_return->values[i][j] = m->values[i][j] * scale;
+        }
+    }
+
+    return m_return;
+}
+
 matrix* m_transpose(matrix *m) {
     matrix *m_return = m_create(m->Nrows, m->Ncols, NULL);
 
     for (int i = 0; i < m->Nrows; i++) {
         for (int j = 0; j < m->Ncols; j++) {
             m_return->values[j][i] = m->values[i][j];
+        }
+    }
+
+    return m_return;
+}
+
+matrix* m_cofactor(matrix *m) {
+    matrix *m_return = m_create(m->Nrows, m->Ncols, NULL);
+
+    for (int i = 0; i < m_return->Nrows; i++) {
+        for (int j = 0; j < m_return->Ncols; j++) {
+            m_return->values[i][j] = pow(-1, i + j) * m_det(m_get_sub(m, i, j));
         }
     }
 
@@ -163,20 +179,22 @@ matrix* m_get_sub(matrix *m, Index row, Index col) {
     return m_return;
 }
 
-/*
-    Find the pivot of column j (the first non-zero element in the column).
-    If the pivot row is not at the top exchange it with the top one.
-    Scale the pivot row with the inverse of the pivot (pivot^-1).
-    For each row with a non-zero pivot, subtract the i pivot scaled pivot row from it.
-    j += 1
-*/
+matrix* m_adj(matrix *m) {
+    matrix *m_return = m_create(m->Ncols, m->Nrows, m_transpose(m_cofactor(m))->values);
+    return m_return;
+}
 
-matrix* m_ref(matrix *m) {
-    double pivot, *col;
-    
-    for (int j = 0; j < m->Ncols; j++) {
-        col = m_get_col(m, j);
+matrix* m_inverse(matrix *m) {
+    double det = m_det(m);
+
+    if (det == 0) {
+        return NULL;
     }
+    
+    matrix *almost_m_return = m_create(m->Nrows, m->Ncols, m_adj(m)->values);
+    matrix *m_return = m_scale(almost_m_return, 1.0/m_det(m));
+
+    return m_return;
 }
 
 matrix* m_add(matrix *m1, matrix *m2) {
@@ -231,3 +249,10 @@ matrix* m_mult(matrix *m1, matrix *m2) {
     return m_return;
 }
 
+matrix* m_div(matrix *m1, matrix *m2) {
+    if (m2->Nrows != m2->Ncols) {
+        return NULL;
+    }
+
+    return m_mult(m1, m_inverse(m2));
+}

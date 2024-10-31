@@ -6,7 +6,6 @@ typedef struct {
     double **values;
 } matrix;
 
-void m_scale(matrix *m, double scale);
 
 char* m_to_string(matrix *m);
 
@@ -24,11 +23,17 @@ double* r_sub(double *row1, double *row2, int size);
 
 matrix* m_create(Index rows, Index cols, double *data[]);
 
+matrix* m_scale(matrix *m, double scale);
+
 matrix* m_transpose(matrix *m);
+
+matrix* m_cofactor(matrix *m);
 
 matrix* m_get_sub(matrix *m, Index row, Index col);
 
-matrix* m_ref(matrix *m);
+matrix* m_adj(matrix *m);
+
+matrix* m_inverse(matrix *m);
 
 matrix* m_add(matrix *m1, matrix *m2);
 

@@ -32,8 +32,8 @@ int main(int *argc, char *argv[]) {
     matrix *added = m_add(m1, m2);
     matrix *sub_m3 = m_get_sub(m3, 1, 1);
     matrix *mult_m3_m4 = m_mult(m3, m4);
-
-    double dot = m_dot(subtest4_1, subtest4_2, 3);
+    matrix *inverse_m3 = m_inverse(m3);
+    matrix *div_m3_m4 = m_div(m3, m4);
 
     // printf(m_to_string(*m1));
     // printf(m_to_string(*m2));
@@ -41,8 +41,10 @@ int main(int *argc, char *argv[]) {
     // printf(m_to_string(*mT));
     // printf(m_to_string(*added));
     // printf(m_to_string(*sub_m3));
-    printf(m_to_string(mult_m3_m4));
+    // printf(m_to_string(mult_m3_m4));
+    // printf(m_to_string(inverse_m3));
+    printf(m_to_string(div_m3_m4));
     // printf("%f", m_det(m3));
-
+    
     return 0;
 }
