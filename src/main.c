@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <math.h>
 
 #include "matrix_stuff/matrix.h"
+#include "neural_network_stuff/vector.h"
 
-int main(int *argc, char *argv[]) {
+void matrix_stuff(void) {
     double subtest1_1[2] = { 1, 2 };
     double subtest1_2[2] = { 3, 4 };
 
@@ -42,9 +43,35 @@ int main(int *argc, char *argv[]) {
     // printf(m_to_string(*added));
     // printf(m_to_string(*sub_m3));
     // printf(m_to_string(mult_m3_m4));
-    // printf(m_to_string(inverse_m3));
+    printf(m_to_string(inverse_m3));
     printf(m_to_string(div_m3_m4));
     // printf("%f", m_det(m3));
-    
+
+    return;
+}
+
+void vector_stuff(void) {
+    double test1[3] = { -6, 1, 3 };
+
+    double test1_1[3] = { 1, 2, 3 };
+    double test1_2[3] = { 4, 5, 6 };
+    double test1_3[3] = { 7, 8, 9 };
+
+    double *test1_m[3] = { test1_1, test1_2, test1_3 };
+
+    vector* v = v_create(sizeof(test1) / sizeof(double), test1);
+    matrix* m = m_create(3, 3, test1_m);
+
+    vector *v_m_mult = m_v_mult(m, v);
+    vector *v_sig = v_sigmoid(v_m_mult);
+
+    // printf(v_to_string(v_m_mult));
+    // printf(v_to_string(v_sig));
+}
+
+int main(int *argc, char *argv[]) {
+    matrix_stuff();
+    vector_stuff();
+
     return 0;
 }

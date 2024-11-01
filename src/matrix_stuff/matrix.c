@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
 #include "matrix.h"
 
 char* m_to_string(matrix *m) {
@@ -15,7 +16,7 @@ char* m_to_string(matrix *m) {
     for (Index i = 0; i < m->Nrows; i++) {
         ptr += sprintf(ptr, "  [");
         for (Index j = 0; j < m->Ncols; j++) {
-            ptr += sprintf(ptr, "%.4f", m->values[i][j]);  // Format to 2 decimal places
+            ptr += sprintf(ptr, "%.4f", m->values[i][j]);
             if (j < m->Ncols - 1) {
                 ptr += sprintf(ptr, ", ");
             }
@@ -57,11 +58,6 @@ double m_dot(double *row, double *col, int size) {
     return sum;
 }
 
-double m_find_pivot(double *col) {
-    for (int i = 0; i < sizeof(*col) / sizeof(double); i++)
-        if (col[i] != 0) return col[i];
-}
-
 double* m_get_row(matrix *m, Index i) {
     double *a_return = malloc(m->Ncols * sizeof(double));
 
@@ -82,18 +78,12 @@ double* m_get_col(matrix *m, Index j) {
     return a_return;
 }
 
-double* r_sub(double *row1, double *row2, int size) {
-    double *row3 = malloc(size * sizeof(double));
-
-    for (int i = 0; i < size; i++) {
-        row3[i] = row1[i] - row2[i];
-    }
-
-    return row3;
-}
-
 matrix* m_create(Index rows, Index cols, double **data) {
     matrix *m = malloc(sizeof(matrix));
+
+    if (m == NULL) {
+        return NULL;
+    }
 
     m->Nrows = rows;
     m->Ncols = cols;
