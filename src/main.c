@@ -43,8 +43,8 @@ void matrix_stuff(void) {
     // printf(m_to_string(*added));
     // printf(m_to_string(*sub_m3));
     // printf(m_to_string(mult_m3_m4));
-    printf(m_to_string(inverse_m3));
-    printf(m_to_string(div_m3_m4));
+    // printf(m_to_string(inverse_m3));
+    // printf(m_to_string(div_m3_m4));
     // printf("%f", m_det(m3));
 
     return;
@@ -52,6 +52,7 @@ void matrix_stuff(void) {
 
 void vector_stuff(void) {
     double test1[3] = { -6, 1, 3 };
+    double test2[3] = { 6, -1, -3 };
 
     double test1_1[3] = { 1, 2, 3 };
     double test1_2[3] = { 4, 5, 6 };
@@ -59,14 +60,19 @@ void vector_stuff(void) {
 
     double *test1_m[3] = { test1_1, test1_2, test1_3 };
 
-    vector* v = v_create(sizeof(test1) / sizeof(double), test1);
-    matrix* m = m_create(3, 3, test1_m);
+    vector *v1 = v_create(sizeof(test1) / sizeof(double), test1);
+    vector *v2 = v_create(sizeof(test2) / sizeof(double), test2);
+    matrix *m = m_create(3, 3, test1_m);
 
-    vector *v_m_mult = m_v_mult(m, v);
+    vector *v_m_mult = m_v_mult(m, v1);
     vector *v_sig = v_sigmoid(v_m_mult);
+    vector *v1_v2_add = v_add(v1, v2);
 
     // printf(v_to_string(v_m_mult));
     // printf(v_to_string(v_sig));
+    printf(v_to_string(v1_v2_add));
+
+    return;
 }
 
 int main(int *argc, char *argv[]) {

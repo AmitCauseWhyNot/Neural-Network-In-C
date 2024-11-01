@@ -5,6 +5,8 @@
 #include "../matrix_stuff/matrix.h"
 #include "vector.h"
 
+// Va1 = sigmoid(W*Va0 + b);
+
 char* v_to_string(vector *v) {
     int buf_size = v->length * 10 + v->length * 2 + v->length / 10 * 2 + 20;
     char *result = malloc(buf_size);
