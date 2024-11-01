@@ -13,7 +13,7 @@ char* m_to_string(matrix *m);
 
 double m_det(matrix *m);
 
-double m_dot(double *row, double *col, int size);z
+double m_dot(double *row, double *col, int size);
 
 double* m_get_row(matrix *m, Index i);
 

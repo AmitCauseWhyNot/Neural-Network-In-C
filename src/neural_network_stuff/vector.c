@@ -87,6 +87,30 @@ vector* v_create(Index length, double *values) {
     return v_return;
 }
 
+vector* v_scale(vector *v, double scale) {
+    vector *v_return = v_create(v->length, NULL);
+
+    for (int i = 0; i < v_return->length; i++) {
+        v_return->values[i] = v->values[i] * scale;
+    }
+
+    return v_return;
+}
+
+vector* v_add(vector *v1, vector *v2) {
+    if (v1->length != v2->length) {
+        return NULL;
+    }
+
+    vector *v_return = v_create(v1->length, NULL);
+
+    for (int i = 0; i < v_return->length; i++) {
+        v_return->values[i] = v1->values[i] + v2->values[i];
+    }
+
+    return v_return;
+}
+
 vector* m_v_mult(matrix* m, vector* v) {
     if (m->Nrows != v->length) {
         return NULL;

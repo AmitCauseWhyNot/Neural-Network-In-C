@@ -20,4 +20,8 @@ vector* v_sigmoid(vector *v);
 
 vector* v_create(Index length, double *values);
 
+vector* v_scale(vector *v, double scale);
+
+vector* v_add(vector *v1, vector *v2);
+
 vector* m_v_mult(matrix *m, vector *v);
