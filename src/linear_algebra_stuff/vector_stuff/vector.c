@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "../../matrix_stuff/matrix.h"
+#include "../matrix_stuff/matrix.h"
 #include "vector.h"
 
 // Va1 = sigmoid(W*Va0 + b);
