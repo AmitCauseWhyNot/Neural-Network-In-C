@@ -3,7 +3,7 @@
 #include <math.h>
 
 #include "matrix_stuff/matrix.h"
-#include "neural_network_stuff/vector.h"
+#include "neural_network_stuff/vector_stuff/vector.h"
 
 void matrix_stuff(void) {
     double subtest1_1[2] = { 1, 2 };

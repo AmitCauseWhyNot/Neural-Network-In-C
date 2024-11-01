@@ -1,4 +1,4 @@
-#include "../matrix_stuff/matrix.h"
+#include "../../matrix_stuff/matrix.h"
 
 typedef unsigned int Index;
 

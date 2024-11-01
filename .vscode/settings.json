@@ -10,6 +10,7 @@
         "format": "c",
         "initializer_list": "c",
         "span": "c",
-        "vector.h": "c"
+        "vector.h": "c",
+        "matrix.h": "c"
     }
 }
