@@ -11,6 +11,8 @@ typedef struct {
 
 char* m_to_string(matrix *m);
 
+char* r_to_string(double *row, int size);
+
 double m_det(matrix *m);
 
 double m_dot(double *row, double *col, int size);

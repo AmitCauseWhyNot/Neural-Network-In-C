@@ -5,8 +5,6 @@
 #include "../matrix_stuff/matrix.h"
 #include "vector.h"
 
-// Va1 = sigmoid(W*Va0 + b);
-
 char* v_to_string(vector *v) {
     int buf_size = v->length * 10 + v->length * 2 + v->length / 10 * 2 + 20;
     char *result = malloc(buf_size);
@@ -52,20 +50,6 @@ double r_sum(double *row, Index size) {
     }
 
     return sum;
-}
-
-double sigmoid(double value) {
-    return 1.0/(1.0 + exp(-1.0 * value));
-}
-
-vector* v_sigmoid(vector *v) {
-    vector *v_return = v_create(v->length, NULL);
-
-    for (int i = 0; i < v_return->length; i++) {
-        v_return->values[i] = sigmoid(v->values[i]);
-    }
-
-    return v_return;
 }
 
 vector* v_create(Index length, double *values) {

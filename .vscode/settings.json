@@ -11,6 +11,8 @@
         "initializer_list": "c",
         "span": "c",
         "vector.h": "c",
-        "matrix.h": "c"
+        "matrix.h": "c",
+        "neural_structions.h": "c",
+        "stdio.h": "c"
     }
 }

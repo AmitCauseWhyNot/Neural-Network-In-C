@@ -31,6 +31,31 @@ char* m_to_string(matrix *m) {
     return result;
 }
 
+char* r_to_string(double *row, int size) {
+    int bufsize = 15 * size + 5;
+    char *result = malloc(bufsize);
+    if (result == NULL) {
+        return NULL;
+    }
+
+    char *ptr = result;
+    ptr += sprintf(ptr, "[ ");
+    for (int i = 0; i < size; i++) {
+        ptr += sprintf(ptr, "%.3f", row[i]);
+        
+        if (i < size - 1) {
+            ptr += sprintf(ptr, ", ");
+        }
+
+        if ((i + 1) % 10 == 0 && i < size - 1) {
+            ptr += sprintf(ptr, "\n  ");
+        }
+    }
+    sprintf(ptr, " ]");
+
+    return result;
+}
+
 double m_det(matrix *m) {
     if (m->Nrows != m->Ncols) {
         return -1.0;
@@ -221,6 +246,7 @@ matrix* m_sub(matrix *m1, matrix *m2) {
 
 matrix* m_mult(matrix *m1, matrix *m2) {
     if (m1->Ncols != m2->Nrows) {
+        printf("Not equal");
         return NULL;
     }
 
