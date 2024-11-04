@@ -5,7 +5,7 @@
 #include "linear_algebra_stuff/matrix_stuff/matrix.h"
 #include "linear_algebra_stuff/vector_stuff/vector.h"
 #include "neural_network_stuff/neural_structions.h"
-
+test
 void matrix_stuff(void) {
     matrix *m1 = m_create(784, 16, NULL);
     matrix *m2 = m_create(16, 784, NULL);
