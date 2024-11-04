@@ -3,8 +3,6 @@
 
 #include "../matrix_stuff/matrix.h"
 
-typedef unsigned int Index;
-
 typedef struct {
     Index length;
     double *values;

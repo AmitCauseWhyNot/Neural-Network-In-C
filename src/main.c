@@ -18,7 +18,6 @@ void matrix_stuff(void) {
     }
 
     double *row = m1->values[2];
-    printf(r_to_string(row, sizeof));
     return;
 }
 

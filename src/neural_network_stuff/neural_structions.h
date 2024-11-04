@@ -10,25 +10,21 @@
     b: the bias vector that has the biases of the next layer Va1, with size n.
 */
 
-typedef unsigned int Index;
-
 typedef struct {
     double value; // Activation value.
     double bias; // Could be 0.0 if the Neuron is in the input layer.
+    double *weights; // List of the weights, size of the next layer.
 } Neuron;
 
 typedef struct {
-    Neuron *from;
-    Neuron *to;
-    double value;
-} Weight;
-
-typedef struct {
+    Index size;
     Neuron *neurons;
-
 } Layer;
 
-// sigmoid = 1/(1 + e^-x)
+// sigmoid = 1/(1 + e^{-x})
 double sigmoid(double value);
+
+// Takes *l which is a pointer to the layer you're on and *N which is a pointer to the next Neuron.
+double next_neuron_value(Layer *l, Neuron* N);
 
 vector* v_sigmoid(vector *v);

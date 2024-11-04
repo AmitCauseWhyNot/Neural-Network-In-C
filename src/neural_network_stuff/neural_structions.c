@@ -4,9 +4,22 @@
 
 #include "../linear_algebra_stuff/matrix_stuff/matrix.h"
 #include "../linear_algebra_stuff/vector_stuff/vector.h"
+#include "neural_structions.h"
 
 double sigmoid(double value) {
     return 1.0 / (1 + exp(value));
+}
+
+double next_neuron_value(Layer* l, Neuron* N) {
+    double sum_values = 0.0;
+    
+    for (int i = 0; i < l->size; i++) {
+        sum_values += (l->neurons[i].weights[i] * l->neurons[i].value);
+    }
+
+    sum_values += N->bias;
+
+    return sigmoid(sum_values);
 }
 
 vector* v_sigmoid(vector *v) {
