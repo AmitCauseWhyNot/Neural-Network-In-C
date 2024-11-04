@@ -39,6 +39,8 @@ void vector_stuff(void) {
     vector *v_sig = v_sigmoid(v_m_mult);
     vector *v1_v2_add = v_add(v1, v2);
 
+    printf(v_to_string(v1_v2_add));
+
     return;
 }
 

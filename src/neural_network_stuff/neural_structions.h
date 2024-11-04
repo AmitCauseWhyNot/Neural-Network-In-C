@@ -27,4 +27,5 @@ double sigmoid(double value);
 // Takes *l which is a pointer to the layer you're on and *N which is a pointer to the next Neuron.
 double next_neuron_value(Layer *l, Neuron* N);
 
+// Takes a vector *v and excecutes the sigmoid function on each value in the vector and returns a new one.
 vector* v_sigmoid(vector *v);
