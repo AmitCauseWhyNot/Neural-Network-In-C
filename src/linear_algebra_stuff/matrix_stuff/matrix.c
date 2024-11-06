@@ -104,29 +104,41 @@ double* m_get_col(matrix *m, Index j) {
 }
 
 matrix* m_create(Index rows, Index cols, double **data) {
+    // Allocate memory for the matrix structure
     matrix *m = malloc(sizeof(matrix));
-
     if (m == NULL) {
         return NULL;
     }
 
+    // Set the dimensions
     m->Nrows = rows;
     m->Ncols = cols;
-    m->values = malloc(m->Nrows * sizeof(double*));
-    
+
+    // If data is provided, use it directly and skip allocation
+    if (data != NULL) {
+        m->values = data;
+        return m;
+    }
+
+    // Allocate memory for the row pointers
+    m->values = malloc(rows * sizeof(double*));
     if (m->values == NULL) {
+        free(m);
         return NULL;
     }
 
-    for (int i = 0; i < m->Nrows; i++) {
-        m->values[i] = malloc(m->Ncols * sizeof(double));
+    // Allocate memory for each row
+    for (int i = 0; i < rows; i++) {
+        m->values[i] = malloc(cols * sizeof(double));
         if (m->values[i] == NULL) {
+            // Free previously allocated rows in case of failure
+            for (int j = 0; j < i; j++) {
+                free(m->values[j]);
+            }
+            free(m->values);
+            free(m);
             return NULL;
         }
-    }
-
-    if (data != NULL) {
-        m->values = data;
     }
 
     return m;
