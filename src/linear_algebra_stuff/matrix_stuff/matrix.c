@@ -202,6 +202,8 @@ matrix* m_adj(matrix *m) {
 matrix* m_inverse(matrix *m) {
     double det = m_det(m);
 
+    printf("%f", det);
+
     if (det == 0) {
         return NULL;
     }

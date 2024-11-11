@@ -60,7 +60,6 @@ matrix* m_mult(matrix *m1, matrix *m2);
     CHANGE THIS FUNCTION TO A BETTER FASTER MORE OPTIMIZED FUNCTION.
 */
 
-
 // Takes 2 matrices *m1 and *m2 and returns the "divided" matrix.
 matrix* m_div(matrix *m1, matrix *m2);
 

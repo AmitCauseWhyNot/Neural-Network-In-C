@@ -7,17 +7,17 @@
 #include "neural_network_stuff/neural_structions.h"
 
 void matrix_stuff(void) {
-    matrix *m1 = m_create(784, 16, NULL);
-    matrix *m2 = m_create(16, 784, NULL);
+    matrix *m1 = m_create(6, 6, NULL);
+    matrix *m2 = m_create(6, 6, NULL);
 
-    for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 784; j++) {
-            m1->values[j][i] = i * j;
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 6; j++) {
+            m1->values[j][i] = rand()/444.0;
             m2->values[i][j] = i + j;
         }
     }
 
-    double *row = m1->values[2];
+    printf(m_to_string(m_inverse(m1)));
     return;
 }
 
@@ -39,7 +39,7 @@ void vector_stuff(void) {
     vector *v_sig = v_sigmoid(v_m_mult);
     vector *v1_v2_add = v_add(v1, v2);
 
-    printf(v_to_string(v1_v2_add));
+    // printf(v_to_string(v1_v2_add));
 
     return;
 }
