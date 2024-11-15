@@ -10,14 +10,15 @@ double sigmoid(double value) {
     return 1.0 / (1 + exp(value));
 }
 
-double next_neuron_value(Layer* l, Neuron* N) {
+double next_neuron_value(Layer* l, Layer* n_l, int index) {
     double sum_values = 0.0;
     
     for (int i = 0; i < l->size; i++) {
-        sum_values += (l->neurons[i].weights[i] * l->neurons[i].value);
+        sum_values += (l->neurons[i].weights[index] * l->neurons[i].value);
+        // printf("Index: %d, This Value: %f, Weight: %f, Value: %f\n", i, sum_values, l->neurons[i].weights[i] * l->neurons[i].value);
     }
 
-    sum_values += N->bias;
+    sum_values += n_l->neurons[index].bias;
 
     return sigmoid(sum_values);
 }
