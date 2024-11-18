@@ -8,7 +8,8 @@
 #include "linear_algebra_stuff/vector_stuff/vector.h"
 #include "neural_network_stuff/neural_structions.h"
 
-<<<<<<< HEAD
+#define SCALE 10.0
+
 void matrix_stuff(void) {
     matrix *m1 = m_create(6, 6, NULL);
     matrix *m2 = m_create(6, 6, NULL);
@@ -16,25 +17,6 @@ void matrix_stuff(void) {
     for (int i = 0; i < 6; i++) {
         for (int j = 0; j < 6; j++) {
             m1->values[j][i] = rand()/444.0;
-=======
-#define SCALE 0.10
-
-float getRandomFloat(float min, float max)
-{
-    return min + (float)rand() / RAND_MAX * (max - min);
-}
-
-void matrix_stuff(void)
-{
-    matrix *m1 = m_create(784, 16, NULL);
-    matrix *m2 = m_create(16, 784, NULL);
-
-    for (int i = 0; i < 16; i++)
-    {
-        for (int j = 0; j < 784; j++)
-        {
-            m1->values[j][i] = i * j;
->>>>>>> 90467e0e059740fd7259edc8d10afdcae6b4fcf1
             m2->values[i][j] = i + j;
         }
     }
@@ -62,9 +44,6 @@ void vector_stuff(void)
     vector *v_sig = v_sigmoid(v_m_mult);
     vector *v1_v2_add = v_add(v1, v2);
 
-<<<<<<< HEAD
-    // printf(v_to_string(v1_v2_add));
-=======
     return;
 }
 
@@ -98,7 +77,6 @@ void neural_structions_stuff(void)
         hidden_l->neurons[i].value = next_neuron_value(input_l, hidden_l, i);
         printf("%f\n", hidden_l->neurons[i].value);
     }
->>>>>>> 90467e0e059740fd7259edc8d10afdcae6b4fcf1
 
     return;
 }
