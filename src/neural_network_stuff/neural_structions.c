@@ -16,7 +16,7 @@ double d_sigmoid(double value)
     return sigmoid(value) * (1 - sigmoid(value));
 }
 
-double softmax(vector *v)
+vector* softmax(vector *v)
 {
     vector *v_return = v_create(v->length, NULL);
 
@@ -73,7 +73,7 @@ vector *get_bias_gradient(vector *L)
     return L;
 }
 
-vector *get_hidden_lambda(matrix *W, vector *L, (double)(*a_f)(double), vector *Z)
+vector *get_hidden_lambda(matrix *W, vector *L, double (*a_f)(double), vector *Z)
 {
     W = m_transpose(W);
     Z = v_d_sigmoid(Z);
@@ -98,9 +98,9 @@ vector *get_output_lambda(vector *A, vector *Y)
 
 vector *v_d_sigmoid(vector *v)
 {
-    vector *v_return = v_create(v->length);
+    vector *v_return = v_create(v->length, NULL);
 
-    for (int i = 0; i < v_return->length)
+    for (int i = 0; i < v_return->length; i++)
     {
         v_return->values[i] = d_sigmoid(v->values[i]);
     }

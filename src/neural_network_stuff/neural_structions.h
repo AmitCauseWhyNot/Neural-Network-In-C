@@ -22,7 +22,7 @@ double sigmoid(double value);
 double d_sigmoid(double value);
 
 // softmax(v) = exp(v) / sum(exp(v_i)) for i in v.
-double softmax(vector *v);
+vector* softmax(vector *v);
 
 // Takes *l which is a pointer to the layer you're on and *N which is a pointer to the next Neuron.
 double next_neuron_value(Layer *l, Layer *n_l, int index);
@@ -37,7 +37,7 @@ matrix *get_weight_gradient(vector *L, vector *A);
 vector *get_bias_gradient(vector *L);
 
 // W := Weights of next layer, L := lambda of next layer, a_f := pointer to an activation function, Z := values of the layer.
-vector *get_hidden_lambda(matrix *W, vector *L, (double)(*a_f)(double), vector *Z);
+vector *get_hidden_lambda(matrix *W, vector *L, double (*a_f)(double), vector *Z);
 
 // lambda of the output layer (A - Y)
 vector *get_output_lambda(vector *A, vector *Y);

@@ -192,7 +192,7 @@ vector *H_product(vector *v1, vector *v2)
 
 matrix *v_vT_mult(vector *v1, vector *v2)
 {
-    matrix *m_return = m_create(v1->length, v2->length);
+    matrix *m_return = m_create(v1->length, v2->length, NULL);
 
     for (int i = 0; i < m_return->Nrows; i++)
     {
