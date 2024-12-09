@@ -19,6 +19,15 @@ int get_next_power(int num)
     return 1 << sizeof(num) * 8 - __builtin_clz(num);
 }
 
+void m_free(matrix *m)
+{
+    for (int i = 0; i < m->Nrows; i++)
+    {
+        free(m->values[i]);
+    }
+    free(m);
+}
+
 char *m_to_string(matrix *m)
 {
     size_t initial_size = 1024; // Start with a reasonable buffer size
@@ -397,58 +406,14 @@ matrix *m_mult(matrix *m1, matrix *m2)
             double *col = m_get_col(m2, j);
 
             m_return->values[i][j] = m_dot(row, col, m1->Ncols);
+
+            free(col);
         }
+
+        free(row);
     }
 
     return m_return;
-}
-
-matrix *m_test_mult_wrapper(matrix *m1, matrix *m2, matrix *m3, matrix *m4)
-{
-    ;
-}
-
-matrix *m_test_mult(matrix *m1, matrix *m2)
-{
-    int m_size = get_next_power(max(max(m1->Nrows, m1->Ncols), max(m2->Nrows, m2->Ncols)));
-
-    if (m_size == 2)
-    {
-        return winograd_form_strassen_algorithm(m1, m2);
-    }
-
-    matrix *sub_mat11 = m_create(m_size / 2, m_size / 2, NULL);
-    matrix *sub_mat12 = m_create(m_size / 2, m_size / 2, NULL);
-    matrix *sub_mat13 = m_create(m_size / 2, m_size / 2, NULL);
-    matrix *sub_mat14 = m_create(m_size / 2, m_size / 2, NULL);
-
-    matrix *sub_mat21 = m_create(m_size / 2, m_size / 2, NULL);
-    matrix *sub_mat22 = m_create(m_size / 2, m_size / 2, NULL);
-    matrix *sub_mat23 = m_create(m_size / 2, m_size / 2, NULL);
-    matrix *sub_mat24 = m_create(m_size / 2, m_size / 2, NULL);
-
-    for (int i = 0; i < m_size / 2; i++)
-    {
-        for (int j = 0; j < m_size / 2; j++)
-        {
-            sub_mat11->values[i][j] = m1->values[i][j];
-            sub_mat12->values[i][j + m_size / 2] = m1->values[i][j + m_size / 2];
-            sub_mat13->values[i + m_size / 2][j] = m1->values[i + m_size / 2][j];
-            sub_mat14->values[i + m_size / 2][j + m_size / 2] = m1->values[i + m_size / 2][j + m_size / 2];
-
-            sub_mat21->values[i][j] = m2->values[i][j];
-            sub_mat22->values[i][j + m_size / 2] = m2->values[i][j + m_size / 2];
-            sub_mat23->values[i + m_size / 2][j] = m2->values[i + m_size / 2][j];
-            sub_mat24->values[i + m_size / 2][j + m_size / 2] = m2->values[i + m_size / 2][j + m_size / 2];
-        }
-    }
-
-    printf(m_to_string(sub_mat11));
-    printf(m_to_string(sub_mat12));
-    printf(m_to_string(sub_mat13));
-    printf(m_to_string(sub_mat14));
-
-    return NULL;
 }
 
 matrix *m_div(matrix *m1, matrix *m2)

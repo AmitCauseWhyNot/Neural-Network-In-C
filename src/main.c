@@ -81,9 +81,10 @@ void neural_structions_stuff(void)
     return;
 }
 
-int main(int *argc, char *argv[])
+int main(int argc, char **argv)
 {
     int size = 4;
+    srand(time(NULL));
 
     matrix *m1 = m_create(size, size, NULL);
     matrix *m2 = m_create(size, size, NULL);
@@ -92,15 +93,12 @@ int main(int *argc, char *argv[])
     {
         for (int j = 0; j < size; j++)
         {
-            m1->values[i][j] = i * j;
-            m2->values[i][j] = i + j;
+            m1->values[i][j] = rand() / 10000.0;
+            m2->values[i][j] = rand() / 10000.0;
         }
     }
 
-    m_test_mult(m1, m2);
-    // printf("%d", get_next_power(8));
-
-    // threading_stuff(m1, m2);
+    printf(m_to_string(m_mult(m1, m2)));
     // printf(m_to_string(m_mult(m1, m2)));
 
     return 0;

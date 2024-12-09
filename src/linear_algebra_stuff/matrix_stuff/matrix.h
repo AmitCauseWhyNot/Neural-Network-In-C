@@ -3,7 +3,7 @@
 
 typedef unsigned int Index;
 
-typedef struct
+typedef struct _matrix
 {
     Index Nrows;
     Index Ncols;
@@ -62,11 +62,6 @@ matrix *m_sub(matrix *m1, matrix *m2);
 
 // Takes 2 matrices *m1 and *m2 and returns the multiplied matrix.
 matrix *m_mult(matrix *m1, matrix *m2);
-
-matrix *m_test_mult_wrapper(matrix *m1, matrix *m2, matrix *m3, matrix *m4);
-
-// A faster matrix multiplication algorithm that uses winograd strassen algorithm.
-matrix *m_test_mult(matrix *m1, matrix *m2);
 
 // Takes 2 matrices *m1 and *m2 and returns the "divided" matrix.
 matrix *m_div(matrix *m1, matrix *m2);
