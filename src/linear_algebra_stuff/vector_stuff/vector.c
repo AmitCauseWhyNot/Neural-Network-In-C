@@ -67,6 +67,7 @@ vector *v_create(Index length, double *values)
 
     if (v_return == NULL)
     {
+        printf("Cannot allocate memory");
         return NULL;
     }
 
@@ -149,14 +150,15 @@ vector *m_v_mult(matrix *m, vector *v)
 {
     if (m->Ncols != v->length)
     {
+        printf("Nigga\n");
         return NULL;
     }
 
     vector *v_return = v_create(v->length, NULL);
 
-    for (int i = 0; i < v->length; i++)
+    for (int i = 0; i < v_return->length; i++)
     {
-        v_return->values[i] = m_dot(m->values[i], v->values, v->length);
+        v_return->values[i] = m_dot(m_get_col(m, i), v->values, v->length);
     }
 
     return v_return;

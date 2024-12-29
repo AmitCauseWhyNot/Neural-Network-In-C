@@ -241,7 +241,7 @@ matrix *m_scale(matrix *m, double scale)
 
 matrix *m_transpose(matrix *m)
 {
-    matrix *m_return = m_create(m->Nrows, m->Ncols, NULL);
+    matrix *m_return = m_create(m->Ncols, m->Nrows, NULL);
 
     for (int i = 0; i < m->Nrows; i++)
     {

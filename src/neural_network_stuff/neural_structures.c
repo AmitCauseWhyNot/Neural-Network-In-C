@@ -35,21 +35,6 @@ vector *softmax(vector *v)
     return v_return;
 }
 
-double next_neuron_value(Layer *l, Layer *n_l, int index)
-{
-    double sum_values = 0.0;
-
-    for (int i = 0; i < l->size; i++)
-    {
-        sum_values += (l->neurons[i].weights[index] * l->neurons[i].value);
-        // printf("Index: %d, This Value: %f, Weight: %f, Value: %f\n", i, sum_values, l->neurons[i].weights[i] * l->neurons[i].value);
-    }
-
-    sum_values += n_l->neurons[index].bias;
-
-    return sigmoid(sum_values);
-}
-
 double loss_function(vector *prediction, double *real)
 {
     double total_loss = 0, value;
@@ -107,9 +92,11 @@ vector *v_sigmoid(vector *v)
 {
     vector *v_return = v_create(v->length, NULL);
 
+    printf("%d\n", v_return->length);
     for (int i = 0; i < v_return->length; i++)
     {
         v_return->values[i] = sigmoid(v->values[i]);
+        printf("%d\n", i);
     }
 
     return v_return;

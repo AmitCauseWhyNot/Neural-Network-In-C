@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 #include "linear_algebra_stuff/matrix_stuff/matrix.h"
 #include "linear_algebra_stuff/vector_stuff/vector.h"
@@ -15,71 +14,6 @@ char biases_path[3][32] = {"./src/parameter_stuff/bias1.txt", "./src/parameter_s
 
 void set_parameters(void)
 {
-    FILE *f = fopen(weight_path[0], "r");
-
-    if (f)
-    {
-        double *buff;
-
-        for (int i = 0; i < W1->Nrows; i++)
-        {
-            for (int j = 0; j < W1->Ncols; j++)
-            {
-                fread(buff, sizeof(double), 1, f);
-                W1->values[i][j] = *buff;
-            }
-        }
-        fclose(f);
-
-        f = fopen(weight_path[1], "r");
-        for (int i = 0; i < W2->Nrows; i++)
-        {
-            for (int j = 0; j < W2->Ncols; j++)
-            {
-                fread(buff, sizeof(double), 1, f);
-                W2->values[i][j] = *buff;
-            }
-        }
-        fclose(f);
-
-        f = fopen(weight_path[2], "r");
-        for (int i = 0; i < W3->Nrows; i++)
-        {
-            for (int j = 0; j < W3->Ncols; j++)
-            {
-                fread(buff, sizeof(double), 1, f);
-                W3->values[i][j] = *buff;
-            }
-        }
-        fclose(f);
-
-        f = fopen(biases_path[0], "r");
-        for (int i = 0; i < b1->length; i++)
-        {
-            fread(buff, sizeof(double), 1, f);
-            b1->values[i] = *buff;
-        }
-        fclose(f);
-
-        f = fopen(biases_path[1], "r");
-        for (int i = 0; i < b2->length; i++)
-        {
-            fread(buff, sizeof(double), 1, f);
-            b2->values[i] = *buff;
-        }
-        fclose(f);
-
-        f = fopen(biases_path[2], "r");
-        for (int i = 0; i < b3->length; i++)
-        {
-            fread(buff, sizeof(double), 1, f);
-            b3->values[i] = *buff;
-        }
-        fclose(f);
-
-        return;
-    }
-
     W1 = m_create(784, 16, NULL);
     W2 = m_create(16, 16, NULL);
     W3 = m_create(16, 10, NULL);
@@ -183,12 +117,18 @@ void forward_propagation(vector *input)
 {
     Z1 = v_add(m_v_mult(m_transpose(W1), input), b1);
     A1 = v_sigmoid(Z1);
+    printf("Balls, A1");
 
     Z2 = v_add(m_v_mult(W2, A1), b2);
+    printf("Balls, Z2");
     A2 = v_sigmoid(Z2);
+    printf("Balls, A2");
 
     Z3 = v_add(m_v_mult(W3, A2), b3);
+    printf("Balls, Z3");
     A3 = softmax(Z3);
+    printf("Balls, A3");
+
     return;
 }
 
@@ -225,31 +165,40 @@ void train(double learning_rate)
 
     FILE *f;
     f = fopen(image_train_path, "rb");
-    fseek(f, 4, SEEK_CUR);
-    fread(buffer, sizeof(uint8_t), 4, f);
-    num_images = convert_to_32int(buffer);
 
-    time_t rawtime;
-    struct tm *timeinfo;
-    char time_buffer[80];
+    if (!f)
+    {
+        perror("Cannot open image training file");
+        return;
+    }
+
+    fseek(f, 4, SEEK_CUR);
+    if (fread(buffer, sizeof(uint8_t), 4, f) != 4)
+    {
+        perror("Error reading from file");
+        fclose(f);
+        return;
+    }
+    num_images = convert_to_32int(buffer);
 
     set_parameters();
     for (int i = 0; i < num_images; i++)
     {
         real = v_create(10, NULL);
-        time(&rawtime);
-        timeinfo = localtime(&rawtime);
-        strftime(time_buffer, sizeof(time_buffer), "%H:%M:%S - %d/%m/%Y", timeinfo);
-
+        printf("Balls, real\n");
         image = v_create(784, get_image(image_train_path, i));
+        printf("Balls, image\n");
         label = get_label(label_train_path, i);
+        printf("Balls, label\n");
         real->values[label] = 1.0;
 
         forward_propagation(image);
+        printf("Balls, fp\n");
         backward_propagation(learning_rate, real, image);
+        printf("Balls, bp\n");
         save_parameters();
 
-        printf("[DONE] [WRITE] Epoch %d, %s\n", i + 1, time_buffer);
+        printf("[DONE] [WRITE] Epoch %d\n", i + 1);
 
         v_free(real);
     }

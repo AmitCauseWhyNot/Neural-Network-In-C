@@ -41,10 +41,10 @@ double *get_image(char *path, int num)
         return NULL;
     }
 
-    int skip_length = buff_length * 2 + img_buff_length * (num - 1);
+    int skip_length = buff_length * 2 + img_buff_length * num;
     if (fseek(f, skip_length, SEEK_CUR) != 0)
     {
-        perror("fseek error");
+        perror("fseek error, get_image");
         fclose(f);
         return NULL;
     }
@@ -94,10 +94,10 @@ int get_label(char *path, int num)
         return -1;
     }
 
-    int requested_label_num = 8 + (num - 1);
+    int requested_label_num = 8 + num;
     if (fseek(f, requested_label_num, SEEK_SET) != 0)
     {
-        perror("seek error");
+        perror("seek error label");
         fclose(f);
         return -1;
     }
