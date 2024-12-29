@@ -9,16 +9,6 @@
 #define max(x, y) (((x) >= (y)) ? (x) : (y))
 #define min(x, y) (((x) <= (y)) ? (x) : (y))
 
-int get_next_power(int num)
-{
-    if ((int)log2(num) == log2(num))
-    {
-        return num;
-    }
-
-    return 1 << sizeof(num) * 8 - __builtin_clz(num);
-}
-
 void m_free(matrix *m)
 {
     for (int i = 0; i < m->Nrows; i++)
@@ -176,28 +166,6 @@ double *m_get_col(matrix *m, Index j)
     }
 
     return a_return;
-}
-
-matrix *winograd_form_strassen_algorithm(matrix *m1, matrix *m2)
-{
-    double t = m1->values[0][0] * m2->values[0][0];
-    double u = (m1->values[1][0] - m1->values[0][0]) * (m2->values[0][1] - m2->values[1][1]);
-    double v = (m1->values[1][0] + m1->values[1][1]) * (m2->values[0][1] - m2->values[0][0]);
-    double w = t + (m1->values[1][0] + m1->values[1][1] - m1->values[0][0]) * (m2->values[0][0] + m2->values[1][1] - m2->values[0][1]);
-
-    matrix *m3 = m_create(2, 2, NULL);
-
-    if (m3 == NULL)
-    {
-        return NULL;
-    }
-
-    m3->values[0][0] = t + m1->values[0][1] * m2->values[1][0];
-    m3->values[0][1] = w + v + (m1->values[0][0] + m1->values[0][1] - m1->values[1][0] - m1->values[1][1]) * m2->values[1][1];
-    m3->values[1][0] = w + u + m1->values[1][1] * (m2->values[1][0] + m2->values[0][1] - m2->values[0][0] - m2->values[1][1]);
-    m3->values[1][1] = w + v + u;
-
-    return m3;
 }
 
 matrix *m_create(Index rows, Index cols, double **data)
