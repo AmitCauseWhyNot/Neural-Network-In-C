@@ -9,16 +9,6 @@
 #define max(x, y) (((x) >= (y)) ? (x) : (y))
 #define min(x, y) (((x) <= (y)) ? (x) : (y))
 
-int get_next_power(int num)
-{
-    if ((int)log2(num) == log2(num))
-    {
-        return num;
-    }
-
-    return 1 << sizeof(num) * 8 - __builtin_clz(num);
-}
-
 void m_free(matrix *m)
 {
     for (int i = 0; i < m->Nrows; i++)
@@ -242,6 +232,14 @@ matrix *m_create(Index rows, Index cols, double **data)
             free(m->values);
             free(m);
             return NULL;
+        }
+    }
+
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            m->values[i][j] = 0.0;
         }
     }
 

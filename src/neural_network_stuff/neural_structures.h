@@ -1,3 +1,6 @@
+#ifndef NEURAL_STRUCTURES
+#define NEURAL_STRUCTURES
+
 #include "../linear_algebra_stuff/matrix_stuff/matrix.h"
 #include "../linear_algebra_stuff/vector_stuff/vector.h"
 
@@ -15,6 +18,8 @@ typedef struct
     Neuron *neurons; // Pointer to an array of Neurons.
 } Layer;
 
+void set_parameters(void); // set the weights biases and outputs for each layer.
+
 // sigmoid = 1/(1 + e^{-x})
 double sigmoid(double value);
 
@@ -22,7 +27,7 @@ double sigmoid(double value);
 double d_sigmoid(double value);
 
 // softmax(v) = exp(v) / sum(exp(v_i)) for i in v.
-vector* softmax(vector *v);
+vector *softmax(vector *v);
 
 // Takes *l which is a pointer to the layer you're on and *N which is a pointer to the next Neuron.
 double next_neuron_value(Layer *l, Layer *n_l, int index);
@@ -47,3 +52,5 @@ vector *v_d_sigmoid(vector *v);
 
 // Takes a vector *v and excecutes the sigmoid function on each value in the vector and returns a new one.
 vector *v_sigmoid(vector *v);
+
+#endif

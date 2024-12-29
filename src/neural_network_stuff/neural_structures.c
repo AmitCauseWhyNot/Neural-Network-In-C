@@ -4,11 +4,11 @@
 
 #include "../linear_algebra_stuff/matrix_stuff/matrix.h"
 #include "../linear_algebra_stuff/vector_stuff/vector.h"
-#include "neural_structions.h"
+#include "neural_structures.h"
 
 double sigmoid(double value)
 {
-    return 1.0 / (1 + exp(value));
+    return 1.0 / (1 + exp(-1.0 * value));
 }
 
 double d_sigmoid(double value)
@@ -16,7 +16,7 @@ double d_sigmoid(double value)
     return sigmoid(value) * (1 - sigmoid(value));
 }
 
-vector* softmax(vector *v)
+vector *softmax(vector *v)
 {
     vector *v_return = v_create(v->length, NULL);
 
