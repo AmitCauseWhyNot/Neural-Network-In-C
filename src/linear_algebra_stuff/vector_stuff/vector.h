@@ -21,6 +21,8 @@ double r_sum(double *row, Index size);
 // Takes the variables length and a pointer to an array of values and returns a vector the size of the length and containing values.
 vector *v_create(Index length, double *values);
 
+void v_free(vector *v);
+
 // Takes a vector *v and a scale and returns a scaled vector.
 vector *v_scale(vector *v, double scale);
 

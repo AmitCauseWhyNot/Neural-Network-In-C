@@ -68,11 +68,6 @@ matrix *get_weight_gradient(vector *L, vector *A)
     return v_vT_mult(L, A);
 }
 
-vector *get_bias_gradient(vector *L)
-{
-    return L;
-}
-
 vector *get_hidden_lambda(matrix *W, vector *L, double (*a_f)(double), vector *Z)
 {
     W = m_transpose(W);
