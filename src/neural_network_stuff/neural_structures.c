@@ -4,11 +4,11 @@
 
 #include "../linear_algebra_stuff/matrix_stuff/matrix.h"
 #include "../linear_algebra_stuff/vector_stuff/vector.h"
-#include "neural_structions.h"
+#include "neural_structures.h"
 
 double sigmoid(double value)
 {
-    return 1.0 / (1 + exp(value));
+    return 1.0 / (1 + exp(-1.0 * value));
 }
 
 double d_sigmoid(double value)
@@ -16,7 +16,7 @@ double d_sigmoid(double value)
     return sigmoid(value) * (1 - sigmoid(value));
 }
 
-vector* softmax(vector *v)
+vector *softmax(vector *v)
 {
     vector *v_return = v_create(v->length, NULL);
 
@@ -66,11 +66,6 @@ double loss_function(vector *prediction, double *real)
 matrix *get_weight_gradient(vector *L, vector *A)
 {
     return v_vT_mult(L, A);
-}
-
-vector *get_bias_gradient(vector *L)
-{
-    return L;
 }
 
 vector *get_hidden_lambda(matrix *W, vector *L, double (*a_f)(double), vector *Z)

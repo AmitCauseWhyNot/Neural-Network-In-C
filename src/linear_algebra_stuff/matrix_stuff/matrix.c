@@ -213,6 +213,14 @@ matrix *m_create(Index rows, Index cols, double **data)
         }
     }
 
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            m->values[i][j] = 0.0;
+        }
+    }
+
     return m;
 }
 

@@ -72,14 +72,15 @@ vector *v_create(Index length, double *values)
 
     v_return->length = length;
     v_return->values = malloc(length * sizeof(double));
+    if (v_return->values == NULL)
+    {
+        perror("memory error");
+        return NULL;
+    }
+
     for (int i = 0; i < length; i++)
     {
         v_return->values[i] = 0.0;
-    }
-
-    if (v_return->values == NULL)
-    {
-        return NULL;
     }
 
     if (values != NULL)
@@ -88,6 +89,14 @@ vector *v_create(Index length, double *values)
     }
 
     return v_return;
+}
+
+void v_free(vector *v)
+{
+    free(v->values);
+    free(v);
+
+    return;
 }
 
 vector *v_scale(vector *v, double scale)
