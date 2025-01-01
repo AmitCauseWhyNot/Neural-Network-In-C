@@ -159,16 +159,14 @@ vector *m_v_mult(matrix *m, vector *v)
         return NULL;
     }
 
-    // Create a result vector of size equal to the number of rows in the matrix
     vector *v_return = v_create(m->Nrows, NULL);
 
-    // Perform matrix-vector multiplication
     for (int i = 0; i < m->Nrows; i++)
     {
         double dot_product = 0.0;
         for (int j = 0; j < m->Ncols; j++)
         {
-            dot_product += m->values[i][j] * v->values[j]; // Dot product of row i with vector
+            dot_product += m->values[i][j] * v->values[j];
         }
         v_return->values[i] = dot_product;
     }

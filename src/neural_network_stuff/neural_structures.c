@@ -54,39 +54,42 @@ vector *softmax(vector *v)
     return v_return;
 }
 
-double loss_function(vector *prediction, vector *real)
+#include <math.h>
+#include <stdio.h>
+
+double cross_entropy_loss(vector *prediction, vector *real)
 {
     if (prediction->length != real->length)
     {
-        fprintf(stderr, "Loss function ERROR: vector lengths are not the same!\n");
-        fprintf(stderr, "Prediction length: %d, Real length: %d\n", prediction->length, real->length);
+        fprintf(stderr, "Cross-Entropy ERROR: vector lengths are not the same!\n");
         return -1.0;
     }
 
-    double total_loss = 0, value;
+    double total_loss = 0.0;
 
     for (int i = 0; i < prediction->length; i++)
     {
-        value = (real->values[i] - prediction->values[i]);
-        total_loss += (value * value);
+        if (real->values[i] == 1.0)
+        {
+            total_loss -= log(prediction->values[i]); // True class
+        }
+        else if (real->values[i] == 0.0)
+        {
+            total_loss -= log(1 - prediction->values[i]); // False class
+        }
     }
 
     return total_loss / prediction->length;
 }
 
-matrix *get_weight_gradient(vector *L, vector *A)
-{
-    return v_vT_mult(L, A);
-}
-
 vector *get_hidden_lambda(matrix *W, vector *L, vector *Z)
 {
-    Z = v_d_relu(Z);
+    vector *Z_relu = v_d_relu(Z);
 
     vector *l_return = v_create(W->Nrows, NULL);
     vector *W_L_mult = m_v_mult(W, L);
 
-    l_return = H_product(W_L_mult, Z);
+    l_return = H_product(W_L_mult, Z_relu);
 
     return l_return;
 }

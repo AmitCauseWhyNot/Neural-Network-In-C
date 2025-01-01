@@ -16,10 +16,7 @@ double d_relu(double value);
 vector *softmax(vector *v);
 
 // Computes the loss of a vector.
-double loss_function(vector *predictions, vector *real);
-
-// change needed in the weight (gradient).
-matrix *get_weight_gradient(vector *L, vector *A);
+double cross_entropy_loss(vector *predictions, vector *real);
 
 // W := Weights of next layer, L := lambda of next layer, Z := values of the layer.
 vector *get_hidden_lambda(matrix *W, vector *L, vector *Z);

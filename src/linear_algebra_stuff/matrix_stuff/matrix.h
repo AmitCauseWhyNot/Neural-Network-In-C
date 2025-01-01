@@ -33,9 +33,6 @@ double *m_get_col(matrix *m, Index j);
 // Takes a num rows, cols and a pointer a 2D array data and returns a matrix the size of the rows and cols containing the data.
 matrix *m_create(Index rows, Index cols, double **data);
 
-// A thread function for multiplying matrices.
-matrix *winograd_form_strassen_algorithm(matrix *m1, matrix *m2);
-
 // Takes a matrix *m and a scale and returns a scaled matrix.
 matrix *m_scale(matrix *m, double scale);
 
