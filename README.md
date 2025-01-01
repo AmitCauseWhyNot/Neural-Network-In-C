@@ -47,8 +47,8 @@ src/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/amitcausewhynot/Basic-Neural-Network-In-C.git
-   cd Basic-Neural-Network-In-C
+   git clone https://github.com/amitcausewhynot/Neural-Network-In-C.git
+   cd Neural-Network-In-C
    ```
 
 2. Compile the project:
