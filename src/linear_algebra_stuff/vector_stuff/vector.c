@@ -67,7 +67,7 @@ vector *v_create(Index length, double *values)
 
     if (v_return == NULL)
     {
-        printf("Cannot allocate memory");
+        perror("v_create ERROR: Cannot allocate memory");
         return NULL;
     }
 
@@ -75,7 +75,7 @@ vector *v_create(Index length, double *values)
     v_return->values = malloc(length * sizeof(double));
     if (v_return->values == NULL)
     {
-        perror("memory error");
+        perror("v_create ERROR: cannot allocate memory");
         return NULL;
     }
 
@@ -116,6 +116,8 @@ vector *v_add(vector *v1, vector *v2)
 {
     if (v1->length != v2->length)
     {
+        fprintf(stderr, "v_add ERROR: lengths not the same\n");
+        fprintf(stderr, "v1 length: %d, v2 length: %d\n", v1->length, v2->length);
         return NULL;
     }
 
@@ -133,6 +135,8 @@ vector *v_sub(vector *v1, vector *v2)
 {
     if (v1->length != v2->length)
     {
+        fprintf(stderr, "v_sub ERROR: lengths not the same\n");
+        fprintf(stderr, "v1 length: %d, v2 length: %d\n", v1->length, v2->length);
         return NULL;
     }
 
@@ -150,15 +154,23 @@ vector *m_v_mult(matrix *m, vector *v)
 {
     if (m->Ncols != v->length)
     {
-        printf("Nigga\n");
+        fprintf(stderr, "m_v_mult ERROR: columns not equal to vector length\n");
+        fprintf(stderr, "Matrix columns: %d, Vector length: %d\n", m->Ncols, v->length);
         return NULL;
     }
 
-    vector *v_return = v_create(v->length, NULL);
+    // Create a result vector of size equal to the number of rows in the matrix
+    vector *v_return = v_create(m->Nrows, NULL);
 
-    for (int i = 0; i < v_return->length; i++)
+    // Perform matrix-vector multiplication
+    for (int i = 0; i < m->Nrows; i++)
     {
-        v_return->values[i] = m_dot(m_get_col(m, i), v->values, v->length);
+        double dot_product = 0.0;
+        for (int j = 0; j < m->Ncols; j++)
+        {
+            dot_product += m->values[i][j] * v->values[j]; // Dot product of row i with vector
+        }
+        v_return->values[i] = dot_product;
     }
 
     return v_return;
@@ -188,6 +200,8 @@ vector *H_product(vector *v1, vector *v2)
 {
     if (v1->length != v2->length)
     {
+        fprintf(stderr, "H_product ERROR: vector length un-equal\n");
+        fprintf(stderr, "v1 length: %d, v2 length: %d\n", v1->length, v2->length);
         return NULL;
     }
 
@@ -203,13 +217,13 @@ vector *H_product(vector *v1, vector *v2)
 
 matrix *v_vT_mult(vector *v1, vector *v2)
 {
-    matrix *m_return = m_create(v1->length, v2->length, NULL);
+    matrix *m_return = m_create(v2->length, v1->length, NULL);
 
     for (int i = 0; i < m_return->Nrows; i++)
     {
         for (int j = 0; j < m_return->Ncols; j++)
         {
-            m_return->values[i][j] = v1->values[i] * v2->values[j];
+            m_return->values[i][j] = v1->values[j] * v2->values[i];
         }
     }
 

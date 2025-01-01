@@ -77,7 +77,7 @@ int get_label(char *path, int num)
     f = fopen(path, "rb");
     if (!f)
     {
-        perror("Error opening file");
+        perror("get_label ERROR: Error opening file");
         return -1;
     }
 
@@ -89,7 +89,7 @@ int get_label(char *path, int num)
 
     if (num > num_labels || !num_labels > num)
     {
-        perror("num out of bounds error");
+        perror("get_label ERROR: num out of bounds error");
         fclose(f);
         return -1;
     }
@@ -97,14 +97,14 @@ int get_label(char *path, int num)
     int requested_label_num = 8 + num;
     if (fseek(f, requested_label_num, SEEK_SET) != 0)
     {
-        perror("seek error label");
+        perror("get_label ERROR: seek error label");
         fclose(f);
         return -1;
     }
 
     if (fread(label, sizeof(uint8_t), 1, f) != 1)
     {
-        perror("error reading label");
+        perror("get_label ERROR: error reading label");
         fclose(f);
         return -1;
     }

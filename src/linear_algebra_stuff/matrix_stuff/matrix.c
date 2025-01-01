@@ -228,9 +228,9 @@ matrix *m_scale(matrix *m, double scale)
 {
     matrix *m_return = m_create(m->Nrows, m->Ncols, NULL);
 
-    for (int i = 0; i < m->Nrows; i++)
+    for (int i = 0; i < m_return->Nrows; i++)
     {
-        for (int j = 0; j < m->Ncols; j++)
+        for (int j = 0; j < m_return->Ncols; j++)
         {
             m_return->values[i][j] = m->values[i][j] * scale;
         }
@@ -345,8 +345,10 @@ matrix *m_add(matrix *m1, matrix *m2)
 
 matrix *m_sub(matrix *m1, matrix *m2)
 {
-    if (m1->Nrows != m2->Ncols || m1->Ncols != m2->Ncols)
+    if (m1->Nrows != m2->Nrows || m1->Ncols != m2->Ncols)
     {
+        fprintf(stderr, "m_sub ERROR: m1 and m2 not of equal shapes\n");
+        fprintf(stderr, "m1 Nrows: %d, m1 Ncols: %d\nm2 Nrows: %d, m2 Ncols: %d", m1->Nrows, m1->Ncols, m2->Nrows, m2->Ncols);
         return NULL;
     }
 

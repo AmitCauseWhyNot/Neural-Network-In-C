@@ -10,7 +10,7 @@ typedef struct _matrix
     double **values;
 } matrix;
 
-int get_next_power(int num);
+void m_free(matrix *m);
 
 // Takes a matrix *m and returns a string containing the values of the matrix.
 char *m_to_string(matrix *m);
