@@ -95,7 +95,7 @@ double rand_uniform(double a, double b)
 
 double xavier_factor(int fan_in, int fan_out)
 {
-    return sqrt(6.0 / (fan_in + fan_out));
+    return sqrt(2.0 / (fan_in + fan_out));
 }
 
 double compute(Layer_t* l, Index cur_idx, Layer_t* prev, double(*a)(double))
@@ -160,29 +160,26 @@ void backwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* outp
     vector* hidden1_values = get_values_vector(hidden1);
     vector* input_values = get_values_vector(input);
 
-    // Output layer: weights are [10 × 64], gradient should be [10 × 64]
-    vector* out_delta = v_sub(predicted, real);  // [10 × 1]
-    matrix* grad_hidden2_output = v_vT_mult(out_delta, hidden2_values);  // [10×1] × [1×64] = [10×64] ✓
+    vector* out_delta = v_sub(predicted, real);
+    matrix* grad_hidden2_output = v_vT_mult(out_delta, hidden2_values);
     update_bias(output, out_delta, rate);
     update_weights(output, grad_hidden2_output, rate);
     
-    // Hidden layer 2: weights are [64 × 128], gradient should be [64 × 128]
-    matrix* out_weights_T = m_transpose(output->weights);  // [64 × 10]
-    vector* out_weights_delta = m_v_mult(out_weights_T, out_delta);  // [64 × 1]
+    matrix* out_weights_T = m_transpose(output->weights);
+    vector* out_weights_delta = m_v_mult(out_weights_T, out_delta);
     vector* vd_sigmoid_hid2 = vd_relu(hidden2_values);
-    vector* hid2_delta = H_product(out_weights_delta, vd_sigmoid_hid2);  // [64 × 1]
+    vector* hid2_delta = H_product(out_weights_delta, vd_sigmoid_hid2);
     
-    matrix* grad_hidden1_hidden2 = v_vT_mult(hid2_delta, hidden1_values);  // [64×1] × [1×128] = [64×128] ✓
+    matrix* grad_hidden1_hidden2 = v_vT_mult(hid2_delta, hidden1_values);
     update_bias(hidden2, hid2_delta, rate);
     update_weights(hidden2, grad_hidden1_hidden2, rate);
 
-    // Hidden layer 1: weights are [128 × 784], gradient should be [128 × 784]
-    matrix* hid2_weights_T = m_transpose(hidden2->weights);  // [128 × 64]
-    vector* hid2_weights_delta = m_v_mult(hid2_weights_T, hid2_delta);  // [128 × 1]
+    matrix* hid2_weights_T = m_transpose(hidden2->weights);
+    vector* hid2_weights_delta = m_v_mult(hid2_weights_T, hid2_delta);
     vector* vd_sigmoid_hid1 = vd_relu(hidden1_values);
-    vector* hid1_delta = H_product(hid2_weights_delta, vd_sigmoid_hid1);  // [128 × 1]
+    vector* hid1_delta = H_product(hid2_weights_delta, vd_sigmoid_hid1);
     
-    matrix* grad_input_hidden1 = v_vT_mult(hid1_delta, input_values);  // [128×1] × [1×784] = [128×784] ✓
+    matrix* grad_input_hidden1 = v_vT_mult(hid1_delta, input_values);
     update_bias(hidden1, hid1_delta, rate);
     update_weights(hidden1, grad_input_hidden1, rate);
 
@@ -214,7 +211,6 @@ Layer_t* lt_create(Index len, char weights, Index prev_len, vector* input)
     r->neurons = malloc(len * sizeof(Neuron_t*));
     if (!r->neurons) { free(r); return NULL; }
 
-    // allocate neurons
     for (Index i = 0; i < len; ++i) {
         r->neurons[i] = malloc(sizeof(Neuron_t));
         r->neurons[i]->value = 0.0;
@@ -222,7 +218,6 @@ Layer_t* lt_create(Index len, char weights, Index prev_len, vector* input)
     }
 
     if (input) {
-        // copy input values into neurons (ensure input->length == len)
         for (Index i = 0; i < input->length && i < len; ++i)
             r->neurons[i]->value = input->values[i];
         return r;
@@ -230,7 +225,7 @@ Layer_t* lt_create(Index len, char weights, Index prev_len, vector* input)
 
     // If this layer has incoming weights, allocate weights matrix with shape (len x prev_len)
     if (weights && prev_len > 0) {
-        r->weights = m_create(len, prev_len, NULL); // rows = cur_len, cols = prev_len
+        r->weights = m_create(len, prev_len, NULL);
         double limit = xavier_factor(prev_len, len); // fan_in = prev_len, fan_out = len
         for (Index i = 0; i < len; ++i) {
             r->neurons[i]->bias = rand_uniform(-limit, limit);

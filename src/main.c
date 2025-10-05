@@ -23,8 +23,9 @@
 #define img_test_path "./src/data_stuff/t10k-images.idx3-ubyte"
 #define lbl_test_path "./src/data_stuff/t10k-labels.idx1-ubyte"
 
-// Improved learning rate schedule
-double get_learning_rate(int epoch) {
+
+double get_learning_rate(int epoch) 
+{
     if (epoch < 3) return INITIAL_LR;
     if (epoch < 6) return INITIAL_LR * 0.5;
     if (epoch < 8) return INITIAL_LR * 0.1;
@@ -64,9 +65,8 @@ void clip_vector(vector* v, double max_norm) {
 }
 
 int main() {
-    srand(time(NULL));  // Seed random number generator
+    srand(time(NULL));
     
-    // Create network layers
     Layer_t* hidden1 = lt_create(HIDDEN1_LENGTH, 1, IMG_LENGTH, NULL);
     Layer_t* hidden2 = lt_create(HIDDEN2_LENGTH, 1, HIDDEN1_LENGTH, NULL);
     Layer_t* output = lt_create(OUT_LENGTH, 1, HIDDEN2_LENGTH, NULL);
@@ -74,13 +74,9 @@ int main() {
     vector* img = v_create(IMG_LENGTH, NULL);
     vector* v_lbl = v_create(OUT_LENGTH, NULL);
 
-    // Create shuffled indices array
-    // IMPORTANT: Check if your get_image/get_label use 0-based or 1-based indexing
-    // If 0-based (0-59999), use: indices[i] = i;
-    // If 1-based (1-60000), use: indices[i] = i + 1;
     int* indices = malloc(TRAIN_SAMPLES * sizeof(int));
     for (int i = 0; i < TRAIN_SAMPLES; i++) {
-        indices[i] = i;  // Assuming 0-based indexing
+        indices[i] = i;
     }
 
     printf("Starting training with mini-batches (batch_size=%d)...\n", BATCH_SIZE);
@@ -91,9 +87,8 @@ int main() {
         double epoch_loss = 0.0;
         int num_batches = 0;
         
-        // Shuffle data at the start of each epoch
-        shuffle_indices(indices, TRAIN_SAMPLES);
         
+        shuffle_indices(indices, TRAIN_SAMPLES);
         printf("Epoch %d/%d (LR=%.6f)\n", epoch, EPOCH_NUM, lr);
         
         // Process mini-batches
@@ -101,7 +96,6 @@ int main() {
             double batch_loss = 0.0;
             int current_batch_size = BATCH_SIZE;
             
-            // Handle last batch (might be smaller)
             if (batch_start + BATCH_SIZE > TRAIN_SAMPLES) {
                 current_batch_size = TRAIN_SAMPLES - batch_start;
             }
@@ -110,7 +104,6 @@ int main() {
             for (int i = 0; i < current_batch_size; i++) {
                 int sample_idx = indices[batch_start + i];
                 
-                // Load image and label with error checking
                 double* cur_img = get_image(img_train_path, sample_idx);
                 if (!cur_img) {
                     printf("ERROR: Failed to load image at index %d\n", sample_idx);
@@ -129,10 +122,8 @@ int main() {
                 
                 Layer_t* input = lt_create(IMG_LENGTH, 0, 0, img);
                 
-                // Forward pass
                 forwards(input, hidden1, hidden2, output);
                 
-                // Calculate loss for this sample
                 vector* pred = get_values_vector(output);
                 batch_loss += cross_entropy_loss(pred, v_lbl);
                 v_free(pred);
@@ -140,7 +131,6 @@ int main() {
                 // Backward pass with scaled learning rate
                 backwards(input, hidden1, hidden2, output, v_lbl, lr / current_batch_size);
                 
-                // Cleanup
                 l_free(input);
                 v_free(cur_v_lbl);
                 free(cur_img);
@@ -160,19 +150,15 @@ int main() {
         }
         
         // Print epoch summary
-        printf("  Epoch %d Average Loss: %.6f\n\n", 
-               epoch, 
-               epoch_loss / TRAIN_SAMPLES);
+        printf("  Epoch %d Average Loss: %.6f\n\n", epoch, epoch_loss / TRAIN_SAMPLES);
     }
 
     printf("\nTraining complete! Starting evaluation...\n");
     
-    // Testing phase
     v_free(v_lbl);
     int count_correct = 0;
 
-    // Assuming test data uses same indexing as training (0-based or 1-based)
-    int test_start_idx = 0;  // Change to 1 if 1-based
+    int test_start_idx = 0;
     for (int i = test_start_idx; i < test_start_idx + TEST_COUNT; i++) {
         double* cur_img = get_image(img_test_path, i);
         if (!cur_img) {
@@ -205,12 +191,8 @@ int main() {
         free(cur_img);
     }
 
-    printf("\nTest Accuracy: %.2f%% (%d/%d correct)\n", 
-           (double)count_correct / (double)TEST_COUNT * 100.0,
-           count_correct,
-           TEST_COUNT);
+    printf("\nTest Accuracy: %.2f%% (%d/%d correct)\n", (double)count_correct / (double)TEST_COUNT * 100.0, count_correct, TEST_COUNT);
 
-    // Cleanup
     free(indices);
     v_free(img);
     l_free(hidden1);

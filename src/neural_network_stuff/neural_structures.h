@@ -6,6 +6,7 @@
 
 #define OUT_LENGTH 10
 #define PI 3.141592653
+#define LEAKY_RELU_C 1e-2
 #define max(x, y) (((x) >= (y)) ? (x) : (y))
 
 typedef struct _nt {
