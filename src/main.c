@@ -12,8 +12,9 @@
 #define TRAIN_SAMPLES 60000
 #define IMG_LENGTH 784
 #define OUT_LENGTH 10
-#define HIDDEN1_LENGTH 128
-#define HIDDEN2_LENGTH 64
+#define HIDDEN1_LENGTH 256
+#define HIDDEN2_LENGTH 128
+#define HIDDEN3_LENGTH 64
 #define BATCH_SIZE 32          // Mini-batch size
 #define INITIAL_LR 0.01        // Initial learning rate
 #define TEST_COUNT 10000
@@ -69,7 +70,8 @@ int main() {
     
     Layer_t* hidden1 = lt_create(HIDDEN1_LENGTH, 1, IMG_LENGTH, NULL);
     Layer_t* hidden2 = lt_create(HIDDEN2_LENGTH, 1, HIDDEN1_LENGTH, NULL);
-    Layer_t* output = lt_create(OUT_LENGTH, 1, HIDDEN2_LENGTH, NULL);
+    Layer_t* hidden3 = lt_create(HIDDEN3_LENGTH, 1, HIDDEN2_LENGTH, NULL);
+    Layer_t* output = lt_create(OUT_LENGTH, 1, HIDDEN3_LENGTH, NULL);
 
     vector* img = v_create(IMG_LENGTH, NULL);
     vector* v_lbl = v_create(OUT_LENGTH, NULL);
@@ -122,14 +124,14 @@ int main() {
                 
                 Layer_t* input = lt_create(IMG_LENGTH, 0, 0, img);
                 
-                forwards(input, hidden1, hidden2, output);
+                forwards(input, hidden1, hidden2, hidden3, output);
                 
                 vector* pred = get_values_vector(output);
                 batch_loss += cross_entropy_loss(pred, v_lbl);
                 v_free(pred);
                 
                 // Backward pass with scaled learning rate
-                backwards(input, hidden1, hidden2, output, v_lbl, lr / current_batch_size);
+                backwards(input, hidden1, hidden2, hidden3, output, v_lbl, lr / current_batch_size);
                 
                 l_free(input);
                 v_free(cur_v_lbl);
@@ -171,7 +173,7 @@ int main() {
         set_values(img->values, cur_img, IMG_LENGTH);
         Layer_t* input = lt_create(IMG_LENGTH, 0, 0, img);
 
-        forwards(input, hidden1, hidden2, output);
+        forwards(input, hidden1, hidden2, hidden3, output);
 
         // Find predicted class
         double max = output->neurons[0]->value;

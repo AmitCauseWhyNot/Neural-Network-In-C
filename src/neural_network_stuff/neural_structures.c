@@ -93,9 +93,16 @@ double rand_uniform(double a, double b)
     return a + (b - a) * ((double)rand() / RAND_MAX);
 }
 
-double xavier_factor(int fan_in, int fan_out)
+double rand_normal(double mean, double std) {
+    double u1 = ((double)rand() + 1.0) / ((double)RAND_MAX + 1.0);
+    double u2 = ((double)rand() + 1.0) / ((double)RAND_MAX + 1.0);
+    double z = sqrt(-2.0 * log(u1)) * cos(2.0 * PI * u2);
+    return mean + z * std;
+}
+
+double he_std(int fan_in)
 {
-    return sqrt(2.0 / (fan_in + fan_out));
+    return sqrt(2.0 / fan_in);
 }
 
 double compute(Layer_t* l, Index cur_idx, Layer_t* prev, double(*a)(double))
@@ -146,58 +153,87 @@ void compute_next(Layer_t* prev, Layer_t* cur, double(*activation1)(double))
     }
 }
 
-void forwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* output)
+void forwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* hidden3, Layer_t* output)
 {
     compute_next(input, hidden1, &relu);
     compute_next(hidden1, hidden2, &relu);
-    compute_next(hidden2, output, NULL);
+    compute_next(hidden2, hidden3, &relu);
+    compute_next(hidden3, output, NULL);
 }
 
-void backwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* output, vector* real, double rate)
+void backwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* hidden3, Layer_t* output, vector* real, double rate)
 {
     vector* predicted = get_values_vector(output);
+    vector* hidden3_values = get_values_vector(hidden3);
     vector* hidden2_values = get_values_vector(hidden2);
     vector* hidden1_values = get_values_vector(hidden1);
     vector* input_values = get_values_vector(input);
 
+    // output layer update
     vector* out_delta = v_sub(predicted, real);
-    matrix* grad_hidden2_output = v_vT_mult(out_delta, hidden2_values);
+    matrix* grad_hidden3_output = v_vT_mult(out_delta, hidden3_values);
     update_bias(output, out_delta, rate);
-    update_weights(output, grad_hidden2_output, rate);
+    update_weights(output, grad_hidden3_output, rate);
     
+    // setup for hidden3 layer
     matrix* out_weights_T = m_transpose(output->weights);
     vector* out_weights_delta = m_v_mult(out_weights_T, out_delta);
-    vector* vd_sigmoid_hid2 = vd_relu(hidden2_values);
-    vector* hid2_delta = H_product(out_weights_delta, vd_sigmoid_hid2);
+    vector* vd_relu_hid3 = vd_relu(hidden3_values);
+    vector* hid3_delta = H_product(out_weights_delta, vd_relu_hid3);
     
+    // hidden3 layer update
+    matrix* grad_hidden2_hidden3 = v_vT_mult(hid3_delta, hidden2_values);
+    update_bias(hidden3, hid3_delta, rate);
+    update_weights(hidden3, grad_hidden2_hidden3, rate);
+
+    // setup for hidden2 layer
+    matrix* hid3_weights_T = m_transpose(hidden3->weights);
+    vector* hid3_weights_delta = m_v_mult(hid3_weights_T, hid3_delta);
+    vector* vd_relu_hid2 = vd_relu(hidden2_values);
+    vector* hid2_delta = H_product(hid3_weights_delta, vd_relu_hid2);
+    
+    // hidden2 layer update
     matrix* grad_hidden1_hidden2 = v_vT_mult(hid2_delta, hidden1_values);
     update_bias(hidden2, hid2_delta, rate);
     update_weights(hidden2, grad_hidden1_hidden2, rate);
 
+    // setup for hidden1 layer
     matrix* hid2_weights_T = m_transpose(hidden2->weights);
     vector* hid2_weights_delta = m_v_mult(hid2_weights_T, hid2_delta);
-    vector* vd_sigmoid_hid1 = vd_relu(hidden1_values);
-    vector* hid1_delta = H_product(hid2_weights_delta, vd_sigmoid_hid1);
-    
+    vector* vd_relu_hid1 = vd_relu(hidden1_values);
+    vector* hid1_delta = H_product(hid2_weights_delta, vd_relu_hid1);
+
+    // hidden1 layer update
     matrix* grad_input_hidden1 = v_vT_mult(hid1_delta, input_values);
     update_bias(hidden1, hid1_delta, rate);
     update_weights(hidden1, grad_input_hidden1, rate);
 
     // Free everything
     v_free(predicted);
+    v_free(hidden3_values);
     v_free(hidden2_values);
     v_free(hidden1_values);
     v_free(input_values);
-    v_free(out_delta);
+    
     v_free(out_weights_delta);
-    v_free(vd_sigmoid_hid2);
-    v_free(hid2_delta);
+    v_free(hid3_weights_delta);
     v_free(hid2_weights_delta);
-    v_free(vd_sigmoid_hid1);
+    
+    v_free(vd_relu_hid3);
+    v_free(vd_relu_hid2);
+    v_free(vd_relu_hid1);
+    
+    v_free(out_delta);
+    v_free(hid3_delta);
+    v_free(hid2_delta);
     v_free(hid1_delta);
+    
     m_free(out_weights_T);
+    m_free(hid3_weights_T);
     m_free(hid2_weights_T);
-    m_free(grad_hidden2_output);
+
+    m_free(grad_hidden3_output);
+    m_free(grad_hidden2_hidden3);
     m_free(grad_hidden1_hidden2);
     m_free(grad_input_hidden1);
 }
@@ -226,11 +262,11 @@ Layer_t* lt_create(Index len, char weights, Index prev_len, vector* input)
     // If this layer has incoming weights, allocate weights matrix with shape (len x prev_len)
     if (weights && prev_len > 0) {
         r->weights = m_create(len, prev_len, NULL);
-        double limit = xavier_factor(prev_len, len); // fan_in = prev_len, fan_out = len
+        double std = he_std(prev_len); // fan_in = prev_len
         for (Index i = 0; i < len; ++i) {
-            r->neurons[i]->bias = rand_uniform(-limit, limit);
+            r->neurons[i]->bias = BASE_BIAS;
             for (Index j = 0; j < prev_len; ++j) {
-                r->weights->values[i][j] = rand_uniform(-limit, limit);
+                r->weights->values[i][j] = rand_normal(0.0, std);
             }
         }
     } else {

@@ -6,7 +6,7 @@
 
 #define OUT_LENGTH 10
 #define PI 3.141592653
-#define LEAKY_RELU_C 1e-2
+#define BASE_BIAS 1e-2
 #define max(x, y) (((x) >= (y)) ? (x) : (y))
 
 typedef struct _nt {
@@ -46,9 +46,9 @@ void softmax(Layer_t* in);
 
 void compute_next(Layer_t* prev, Layer_t* cur, double(*activation1)(double));
 
-void forwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* output);
+void forwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* hidden3, Layer_t* output);
 
-void backwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* output, vector* real, double rate);
+void backwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* hidden3, Layer_t* output, vector* real, double rate);
 
 Layer_t* lt_create(Index len, char weights, Index prev_len, vector* input);
 
