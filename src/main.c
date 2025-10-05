@@ -1,438 +1,221 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <time.h>
+#include <stdlib.h>
+#include <math.h>
 
 #include "linear_algebra_stuff/matrix_stuff/matrix.h"
 #include "linear_algebra_stuff/vector_stuff/vector.h"
 #include "neural_network_stuff/neural_structures.h"
 #include "MNIST_stuff/mnist.h"
 
-#define SCALE 8192
-#define IMAGE_LENGTH 784
-#define REAL_LENGTH 10
+#define EPOCH_NUM 10           // Number of epochs (full passes through dataset)
+#define TRAIN_SAMPLES 60000
+#define IMG_LENGTH 784
+#define OUT_LENGTH 10
+#define HIDDEN1_LENGTH 128
+#define HIDDEN2_LENGTH 64
+#define BATCH_SIZE 32          // Mini-batch size
+#define INITIAL_LR 0.01        // Initial learning rate
+#define TEST_COUNT 10000
 
-matrix *W1, *W2, *W3;
-vector *b1, *b2, *b3, *Z1, *Z2, *Z3, *A1, *A2, *A3;
+#define img_train_path "./src/data_stuff/train-images.idx3-ubyte"
+#define lbl_train_path "./src/data_stuff/train-labels.idx1-ubyte"
+#define img_test_path "./src/data_stuff/t10k-images.idx3-ubyte"
+#define lbl_test_path "./src/data_stuff/t10k-labels.idx1-ubyte"
 
-char weight_path[3][34] = {"./src/parameter_stuff/weight1.txt", "./src/parameter_stuff/weight2.txt", "./src/parameter_stuff/weight3.txt"};
-char biases_path[3][32] = {"./src/parameter_stuff/bias1.txt", "./src/parameter_stuff/bias2.txt", "./src/parameter_stuff/bias3.txt"};
+// Improved learning rate schedule
+double get_learning_rate(int epoch) {
+    if (epoch < 3) return INITIAL_LR;
+    if (epoch < 6) return INITIAL_LR * 0.5;
+    if (epoch < 8) return INITIAL_LR * 0.1;
+    return INITIAL_LR * 0.05;
+}
 
-int files_exist(void)
-{
-    for (int i = 0; i < 3; i++)
-    {
-        if (access(weight_path[i], F_OK) != 0 || access(biases_path[i], F_OK) != 0)
-        {
-            return 0;
+// Shuffle indices for randomized training
+void shuffle_indices(int* indices, int n) {
+    for (int i = n - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        int temp = indices[i];
+        indices[i] = indices[j];
+        indices[j] = temp;
+    }
+}
+
+void set_values(double* a1, double* a2, int l) {
+    for (int i = 0; i < l; i++) {
+        a1[i] = a2[i];
+    }
+}
+
+// Gradient clipping to prevent exploding gradients
+void clip_vector(vector* v, double max_norm) {
+    double norm = 0.0;
+    for (int i = 0; i < v->length; i++) {
+        norm += v->values[i] * v->values[i];
+    }
+    norm = sqrt(norm);
+    
+    if (norm > max_norm) {
+        double scale = max_norm / norm;
+        for (int i = 0; i < v->length; i++) {
+            v->values[i] *= scale;
         }
     }
-
-    return 1;
 }
 
-int get_predicted_label(vector *output)
-{
-    for (int i = 0; i < output->length; i++)
-    {
-        if (output->values[i])
-        {
-            return i;
-        }
+int main() {
+    srand(time(NULL));  // Seed random number generator
+    
+    // Create network layers
+    Layer_t* hidden1 = lt_create(HIDDEN1_LENGTH, 1, IMG_LENGTH, NULL);
+    Layer_t* hidden2 = lt_create(HIDDEN2_LENGTH, 1, HIDDEN1_LENGTH, NULL);
+    Layer_t* output = lt_create(OUT_LENGTH, 1, HIDDEN2_LENGTH, NULL);
+
+    vector* img = v_create(IMG_LENGTH, NULL);
+    vector* v_lbl = v_create(OUT_LENGTH, NULL);
+
+    // Create shuffled indices array
+    // IMPORTANT: Check if your get_image/get_label use 0-based or 1-based indexing
+    // If 0-based (0-59999), use: indices[i] = i;
+    // If 1-based (1-60000), use: indices[i] = i + 1;
+    int* indices = malloc(TRAIN_SAMPLES * sizeof(int));
+    for (int i = 0; i < TRAIN_SAMPLES; i++) {
+        indices[i] = i;  // Assuming 0-based indexing
     }
 
-    fprintf(stderr, "Error nothing is predicted");
-    return -1;
-}
+    printf("Starting training with mini-batches (batch_size=%d)...\n", BATCH_SIZE);
 
-void allocate_space(void)
-{
-    W1 = m_create(784, 16, NULL);
-    W2 = m_create(16, 16, NULL);
-    W3 = m_create(16, 10, NULL);
-
-    b1 = v_create(16, NULL);
-    b2 = v_create(16, NULL);
-    b3 = v_create(10, NULL);
-}
-
-void load_parameters(void)
-{
-    FILE *f;
-
-    f = fopen(weight_path[0], "r");
-    if (!f)
-    {
-        fprintf(stderr, "File doesn't exist `%s`\n", weight_path[0]);
-        return;
-    }
-
-    for (int i = 0; i < W1->Nrows; i++)
-    {
-        for (int j = 0; j < W1->Ncols; j++)
-        {
-            if (fread(&W1->values[i][j], sizeof(double), 1, f) != 1)
-            {
-                fprintf(stderr, "Error reading from file `%s`", weight_path[0]);
-                fclose(f);
-                return;
+    // Training loop - iterate over epochs
+    for (int epoch = 1; epoch <= EPOCH_NUM; epoch++) {
+        double lr = get_learning_rate(epoch);
+        double epoch_loss = 0.0;
+        int num_batches = 0;
+        
+        // Shuffle data at the start of each epoch
+        shuffle_indices(indices, TRAIN_SAMPLES);
+        
+        printf("Epoch %d/%d (LR=%.6f)\n", epoch, EPOCH_NUM, lr);
+        
+        // Process mini-batches
+        for (int batch_start = 0; batch_start < TRAIN_SAMPLES; batch_start += BATCH_SIZE) {
+            double batch_loss = 0.0;
+            int current_batch_size = BATCH_SIZE;
+            
+            // Handle last batch (might be smaller)
+            if (batch_start + BATCH_SIZE > TRAIN_SAMPLES) {
+                current_batch_size = TRAIN_SAMPLES - batch_start;
+            }
+            
+            // Process each sample in the batch
+            for (int i = 0; i < current_batch_size; i++) {
+                int sample_idx = indices[batch_start + i];
+                
+                // Load image and label with error checking
+                double* cur_img = get_image(img_train_path, sample_idx);
+                if (!cur_img) {
+                    printf("ERROR: Failed to load image at index %d\n", sample_idx);
+                    continue;
+                }
+                
+                vector* cur_v_lbl = get_label_vector(get_label(lbl_train_path, sample_idx));
+                if (!cur_v_lbl) {
+                    printf("ERROR: Failed to load label at index %d\n", sample_idx);
+                    free(cur_img);
+                    continue;
+                }
+                
+                set_values(img->values, cur_img, IMG_LENGTH);
+                set_values(v_lbl->values, cur_v_lbl->values, OUT_LENGTH);
+                
+                Layer_t* input = lt_create(IMG_LENGTH, 0, 0, img);
+                
+                // Forward pass
+                forwards(input, hidden1, hidden2, output);
+                
+                // Calculate loss for this sample
+                vector* pred = get_values_vector(output);
+                batch_loss += cross_entropy_loss(pred, v_lbl);
+                v_free(pred);
+                
+                // Backward pass with scaled learning rate
+                backwards(input, hidden1, hidden2, output, v_lbl, lr / current_batch_size);
+                
+                // Cleanup
+                l_free(input);
+                v_free(cur_v_lbl);
+                free(cur_img);
+            }
+            
+            // Track statistics
+            epoch_loss += batch_loss;
+            num_batches++;
+            
+            // Print progress every 500 batches
+            if (num_batches % 500 == 0) {
+                printf("  Batch %d/%d: Avg Loss = %.6f\n", 
+                       num_batches, 
+                       (TRAIN_SAMPLES + BATCH_SIZE - 1) / BATCH_SIZE,
+                       batch_loss / current_batch_size);
             }
         }
-    }
-    fclose(f);
-
-    f = fopen(weight_path[1], "r");
-    if (!f)
-    {
-        fprintf(stderr, "File doesn't exist `%s`\n", weight_path[1]);
-        return;
+        
+        // Print epoch summary
+        printf("  Epoch %d Average Loss: %.6f\n\n", 
+               epoch, 
+               epoch_loss / TRAIN_SAMPLES);
     }
 
-    for (int i = 0; i < W2->Nrows; i++)
-    {
-        for (int j = 0; j < W2->Ncols; j++)
-        {
-            if (fread(&W2->values[i][j], sizeof(double), 1, f) != 1)
-            {
-                fprintf(stderr, "Error reading from file `%s`", weight_path[1]);
-                fclose(f);
-                return;
-            }
+    printf("\nTraining complete! Starting evaluation...\n");
+    
+    // Testing phase
+    v_free(v_lbl);
+    int count_correct = 0;
+
+    // Assuming test data uses same indexing as training (0-based or 1-based)
+    int test_start_idx = 0;  // Change to 1 if 1-based
+    for (int i = test_start_idx; i < test_start_idx + TEST_COUNT; i++) {
+        double* cur_img = get_image(img_test_path, i);
+        if (!cur_img) {
+            printf("ERROR: Failed to load test image %d\n", i);
+            continue;
         }
-    }
-    fclose(f);
+        
+        int cur_lbl = get_label(lbl_test_path, i);
 
-    f = fopen(weight_path[2], "r");
-    if (!f)
-    {
-        fprintf(stderr, "File doesn't exist `%s`\n", weight_path[2]);
-        return;
-    }
+        set_values(img->values, cur_img, IMG_LENGTH);
+        Layer_t* input = lt_create(IMG_LENGTH, 0, 0, img);
 
-    for (int i = 0; i < W3->Nrows; i++)
-    {
-        for (int j = 0; j < W3->Ncols; j++)
-        {
-            if (fread(&W3->values[i][j], sizeof(double), 1, f) != 1)
-            {
-                fprintf(stderr, "Error reading from file `%s`", weight_path[2]);
-                fclose(f);
-                return;
-            }
-        }
-    }
-    fclose(f);
+        forwards(input, hidden1, hidden2, output);
 
-    f = fopen(biases_path[0], "r");
-    if (!f)
-    {
-        fprintf(stderr, "File doesn't exist `%s`\n", biases_path[0]);
-        return;
-    }
-
-    for (int i = 0; i < b1->length; i++)
-    {
-        if (fread(&b1->values[i], sizeof(double), 1, f) != 1)
-        {
-            fprintf(stderr, "Error reading from file `%s`", biases_path[0]);
-            fclose(f);
-            return;
-        }
-    }
-    fclose(f);
-
-    f = fopen(biases_path[1], "r");
-    if (!f)
-    {
-        fprintf(stderr, "File doesn't exist `%s`\n", biases_path[1]);
-        return;
-    }
-
-    for (int i = 0; i < b2->length; i++)
-    {
-        if (fread(&b2->values[i], sizeof(double), 1, f) != 1)
-        {
-            fprintf(stderr, "Error reading from file `%s`", biases_path[1]);
-            fclose(f);
-            return;
-        }
-    }
-    fclose(f);
-
-    f = fopen(biases_path[2], "r");
-    if (!f)
-    {
-        fprintf(stderr, "File doesn't exist `%s`\n", biases_path[2]);
-        return;
-    }
-
-    for (int i = 0; i < b3->length; i++)
-    {
-        if (fread(&b3->values[i], sizeof(double), 1, f) != 1)
-        {
-            fprintf(stderr, "Error reading from file `%s`", biases_path[2]);
-            fclose(f);
-            return;
-        }
-    }
-    fclose(f);
-
-    return;
-}
-
-void set_parameters(void)
-{
-    srand(time(NULL));
-    for (int i = 0; i < 16; i++)
-    {
-        b1->values[i] = (double)rand() / SCALE;
-        b2->values[i] = (double)rand() / SCALE;
-        if (i < 10)
-        {
-            b3->values[i] = (double)rand() / SCALE;
-        }
-    }
-
-    srand(time(NULL));
-    for (int i = 0; i < 16; i++)
-    {
-        for (int j = 0; j < 16; j++)
-        {
-            W2->values[i][j] = (double)rand() / SCALE;
-            if (j < 10)
-            {
-                W3->values[i][j] = (double)rand() / SCALE;
-            }
-        }
-    }
-
-    srand(time(NULL));
-    for (int i = 0; i < 784; i++)
-    {
-        for (int j = 0; j < 16; j++)
-        {
-            W1->values[i][j] = (double)rand() / RAND_MAX;
-        }
-    }
-
-    return;
-}
-
-void save_parameters(void)
-{
-    FILE *f;
-
-    f = fopen(weight_path[0], "w");
-    for (int i = 0; i < W1->Nrows; i++)
-    {
-        for (int j = 0; j < W1->Ncols; j++)
-        {
-            fprintf(f, "%.6f\n", W1->values[i][j]);
-        }
-    }
-    fclose(f);
-
-    f = fopen(weight_path[1], "w");
-    for (int i = 0; i < W2->Nrows; i++)
-    {
-        for (int j = 0; j < W2->Ncols; j++)
-        {
-            fprintf(f, "%.6f\n", W2->values[i][j]);
-        }
-    }
-    fclose(f);
-
-    f = fopen(weight_path[2], "w");
-    for (int i = 0; i < W3->Nrows; i++)
-    {
-        for (int j = 0; j < W3->Ncols; j++)
-        {
-            fprintf(f, "%.6f\n", W3->values[i][j]);
-        }
-    }
-    fclose(f);
-
-    f = fopen(biases_path[0], "w");
-    for (int i = 0; i < b1->length; i++)
-    {
-        fprintf(f, "%.6f\n", b1->values[i]);
-    }
-    fclose(f);
-
-    f = fopen(biases_path[1], "w");
-    for (int i = 0; i < b2->length; i++)
-    {
-        fprintf(f, "%.6f\n", b2->values[i]);
-    }
-    fclose(f);
-
-    f = fopen(biases_path[2], "w");
-    for (int i = 0; i < b3->length; i++)
-    {
-        fprintf(f, "%.6f\n", b3->values[i]);
-    }
-    fclose(f);
-
-    return;
-}
-
-void forward_propagation(vector *input)
-{
-    Z1 = v_add(m_v_mult(m_transpose(W1), input), b1);
-    A1 = v_relu(Z1);
-
-    Z2 = v_add(m_v_mult(m_transpose(W2), A1), b2);
-    A2 = v_relu(Z2);
-
-    Z3 = v_add(m_v_mult(m_transpose(W3), A2), b3);
-    A3 = softmax(Z3);
-
-    return;
-}
-
-void backward_propagation(double learning_rate, vector *real_value, vector *input_layer)
-{
-    vector *db3 = get_output_lambda(A3, real_value);
-    vector *db2 = get_hidden_lambda(W3, db3, Z2);
-    vector *db1 = get_hidden_lambda(W2, db2, Z1);
-
-    matrix *dW3 = m_scale(v_vT_mult(db3, A2), learning_rate);
-    matrix *dW2 = m_scale(v_vT_mult(db2, A1), learning_rate);
-    matrix *dW1 = m_scale(v_vT_mult(db1, input_layer), learning_rate);
-
-    W3 = m_sub(W3, dW3);
-    b3 = v_sub(b3, db3);
-    m_free(dW3);
-    v_free(db3);
-
-    W2 = m_sub(W2, dW2);
-    b2 = v_sub(b2, db2);
-    m_free(dW2);
-    v_free(db2);
-
-    W1 = m_sub(W1, dW1);
-    b1 = v_sub(b1, db1);
-    m_free(dW1);
-    v_free(db1);
-
-    return;
-}
-
-void train(double learning_rate, double stop)
-{
-    char image_train_path[] = "./src/data_stuff/train-images.idx3-ubyte";
-    char label_train_path[] = "./src/data_stuff/train-labels.idx1-ubyte";
-
-    uint8_t buffer[4];
-    int num_images, label;
-    double loss;
-    vector *image, *real;
-
-    FILE *f;
-    f = fopen(image_train_path, "rb");
-    if (!f)
-    {
-        perror("Cannot open image training file");
-        return;
-    }
-
-    fseek(f, 4, SEEK_CUR);
-    if (fread(buffer, sizeof(uint8_t), 4, f) != 4)
-    {
-        perror("Error reading from file");
-        fclose(f);
-        return;
-    }
-    num_images = convert_to_32int(buffer);
-
-    allocate_space();
-    set_parameters();
-    for (int i = 0; i < num_images; i++)
-    {
-        real = v_create(REAL_LENGTH, NULL);
-        image = v_create(IMAGE_LENGTH, get_image(image_train_path, i));
-        label = get_label(label_train_path, i);
-        real->values[label] = 1.0;
-
-        forward_propagation(image);
-        backward_propagation(learning_rate, real, image);
-
-        if ((i + 1) % 1000 == 0)
-        {
-            loss = cross_entropy_loss(A3, real);
-            printf("[DONE] [WRITE] Epoch %d, loss: %.6f\n", i + 1, loss);
-            save_parameters();
-            if (loss <= stop)
-            {
-                printf("Bro reached heaven :O (diverged)\n");
-                break;
+        // Find predicted class
+        double max = output->neurons[0]->value;
+        int max_index = 0;
+        for (int k = 1; k < OUT_LENGTH; k++) {
+            if (output->neurons[k]->value > max) {
+                max = output->neurons[k]->value;
+                max_index = k;
             }
         }
 
-        v_free(real);
-        v_free(image);
-    }
-
-    return;
-}
-
-void test(void)
-{
-    char image_test_path[] = "./src/data_stuff/t10k-images.idx3-ubyte";
-    char label_test_path[] = "./src/data_stuff/t10k-labels.idx1-ubyte";
-
-    uint8_t buffer[4];
-    int num_images = 0, label = 0;
-    double sum_true = 0.0, scaled = 0.0, final_percentage = 0.0;
-    vector *image, *real;
-    FILE *f;
-
-    f = fopen(image_test_path, "rb");
-    if (!f)
-    {
-        perror("Cannot open image training file");
-        return;
-    }
-
-    fseek(f, 4, SEEK_CUR);
-    if (fread(buffer, sizeof(uint8_t), 4, f) != 4)
-    {
-        perror("Error reading from file");
-        fclose(f);
-        return;
-    }
-    num_images = convert_to_32int(buffer);
-
-    load_parameters();
-    for (int i = 0; i < num_images; i++)
-    {
-        real = v_create(REAL_LENGTH, NULL);
-        image = v_create(IMAGE_LENGTH, get_image(image_test_path, i));
-        label = get_label(label_test_path, i);
-        real->values[label] = 1.0;
-
-        forward_propagation(image);
-
-        if (A3->values[label] == real->values[label])
-        {
-            sum_true += 1.0;
+        if (max_index == cur_lbl) {
+            count_correct++;
         }
 
-        v_free(real);
-        v_free(image);
+        l_free(input);
+        free(cur_img);
     }
 
-    scaled = sum_true / num_images;
-    final_percentage = scaled * 100.0;
-    printf("The final score of the AI is: %.2f\n", final_percentage);
+    printf("\nTest Accuracy: %.2f%% (%d/%d correct)\n", 
+           (double)count_correct / (double)TEST_COUNT * 100.0,
+           count_correct,
+           TEST_COUNT);
 
-    return;
-}
-
-int main(int argc, char **argv)
-{
-    train(0.001, (double)1e-6);
-    test();
+    // Cleanup
+    free(indices);
+    v_free(img);
+    l_free(hidden1);
+    l_free(hidden2);
+    l_free(output);
 
     return 0;
 }

@@ -51,42 +51,26 @@ double *r_scale(double *row, double scale, Index size)
 
 double r_sum(double *row, Index size)
 {
-    double sum;
-
-    for (int i = 0; i < size; i++)
-    {
-        sum += row[i];
-    }
-
+    double sum = 0.0;
+    for (Index i = 0; i < size; ++i) sum += row[i];
     return sum;
 }
 
 vector *v_create(Index length, double *values)
 {
     vector *v_return = malloc(sizeof(vector));
-
-    if (v_return == NULL)
-    {
-        perror("v_create ERROR: Cannot allocate memory");
-        return NULL;
-    }
+    if (!v_return) { perror("v_create"); return NULL; }
 
     v_return->length = length;
     v_return->values = malloc(length * sizeof(double));
-    if (v_return->values == NULL)
-    {
-        perror("v_create ERROR: cannot allocate memory");
-        return NULL;
-    }
+    if (!v_return->values) { perror("v_create values"); free(v_return); return NULL; }
 
-    for (int i = 0; i < length; i++)
-    {
-        v_return->values[i] = 0.0;
-    }
+    // initialize to zero
+    for (Index i = 0; i < length; ++i) v_return->values[i] = 0.0;
 
-    if (values != NULL)
-    {
-        v_return->values = values;
+    // if values supplied, copy them in
+    if (values != NULL) {
+        for (Index i = 0; i < length; ++i) v_return->values[i] = values[i];
     }
 
     return v_return;
@@ -94,10 +78,9 @@ vector *v_create(Index length, double *values)
 
 void v_free(vector *v)
 {
+    if (!v) return;
     free(v->values);
     free(v);
-
-    return;
 }
 
 vector *v_scale(vector *v, double scale)
@@ -215,13 +198,13 @@ vector *H_product(vector *v1, vector *v2)
 
 matrix *v_vT_mult(vector *v1, vector *v2)
 {
-    matrix *m_return = m_create(v2->length, v1->length, NULL);
+    matrix *m_return = m_create(v1->length, v2->length, NULL);
 
     for (int i = 0; i < m_return->Nrows; i++)
     {
         for (int j = 0; j < m_return->Ncols; j++)
         {
-            m_return->values[i][j] = v1->values[j] * v2->values[i];
+            m_return->values[i][j] = v1->values[i] * v2->values[j];
         }
     }
 

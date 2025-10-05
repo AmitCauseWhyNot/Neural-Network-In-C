@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <pthread.h>
-#include <unistd.h>
 
 #include "matrix.h"
 
@@ -11,104 +9,13 @@
 
 void m_free(matrix *m)
 {
+    if (!m) return;
     for (int i = 0; i < m->Nrows; i++)
     {
         free(m->values[i]);
     }
+    free(m->values);
     free(m);
-}
-
-char *m_to_string(matrix *m)
-{
-    size_t initial_size = 1024; // Start with a reasonable buffer size
-    size_t buf_size = initial_size;
-    char *result = malloc(buf_size);
-    if (!result)
-        return NULL;
-
-    size_t current_length = 0; // Track current string length
-    size_t written;
-
-    // Append opening bracket
-    written = snprintf(result, buf_size, "[\n");
-    current_length += written;
-
-    for (int i = 0; i < m->Nrows; i++)
-    {
-        // Ensure enough space for the current row
-        while (current_length + m->Ncols * 15 + 20 > buf_size)
-        {
-            buf_size *= 2;
-            result = realloc(result, buf_size);
-            if (!result)
-                return NULL; // Handle realloc failure
-        }
-
-        // Append row opening
-        written = snprintf(result + current_length, buf_size - current_length, "  [");
-        current_length += written;
-
-        for (int j = 0; j < m->Ncols; j++)
-        {
-            // Append matrix element
-            written = snprintf(result + current_length, buf_size - current_length, "%.4f", m->values[i][j]);
-            current_length += written;
-
-            if (j < m->Ncols - 1)
-            {
-                // Append comma
-                written = snprintf(result + current_length, buf_size - current_length, ", ");
-                current_length += written;
-            }
-        }
-
-        // Append row closing
-        written = snprintf(result + current_length, buf_size - current_length, "]");
-        current_length += written;
-
-        if (i < m->Nrows - 1)
-        {
-            // Append comma and newline for all but the last row
-            written = snprintf(result + current_length, buf_size - current_length, ",\n");
-            current_length += written;
-        }
-    }
-
-    // Append closing bracket
-    written = snprintf(result + current_length, buf_size - current_length, "\n]\n");
-    current_length += written;
-
-    return result;
-}
-
-char *r_to_string(double *row, int size)
-{
-    int bufsize = 15 * size + 5;
-    char *result = malloc(bufsize);
-    if (result == NULL)
-    {
-        return NULL;
-    }
-
-    char *ptr = result;
-    ptr += sprintf(ptr, "[ ");
-    for (int i = 0; i < size; i++)
-    {
-        ptr += sprintf(ptr, "%.3f", row[i]);
-
-        if (i < size - 1)
-        {
-            ptr += sprintf(ptr, ", ");
-        }
-
-        if ((i + 1) % 10 == 0 && i < size - 1)
-        {
-            ptr += sprintf(ptr, "\n  ");
-        }
-    }
-    sprintf(ptr, " ]");
-
-    return result;
 }
 
 double m_det(matrix *m)

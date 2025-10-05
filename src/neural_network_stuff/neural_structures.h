@@ -4,30 +4,51 @@
 #include "../linear_algebra_stuff/matrix_stuff/matrix.h"
 #include "../linear_algebra_stuff/vector_stuff/vector.h"
 
-void set_parameters(void); // set the weights biases and outputs for each layer.
+#define OUT_LENGTH 10
+#define PI 3.141592653
+#define max(x, y) (((x) >= (y)) ? (x) : (y))
 
-// ReLU = max(0, x)
-double relu(double value);
+typedef struct _nt {
+    double value;
+    double bias;
+} Neuron_t;
 
-// ReLU' = (x <= 0) -> 0 else 1
-double d_relu(double value);
+typedef struct _lt {
+    Index len;
+    Neuron_t** neurons;
+    matrix* weights;
+} Layer_t;
 
-// softmax(v) = exp(v) / sum(exp(v_i)) for i in v.
-vector *softmax(vector *v);
+void n_free(Neuron_t* n);
 
-// Computes the loss of a vector.
-double cross_entropy_loss(vector *predictions, vector *real);
+void l_free(Layer_t* l);
 
-// W := Weights of next layer, L := lambda of next layer, Z := values of the layer.
-vector *get_hidden_lambda(matrix *W, vector *L, vector *Z);
+vector* get_values_vector(Layer_t* l);
 
-// lambda of the output layer (A - Y)
-vector *get_output_lambda(vector *A, vector *Y);
+vector* get_label_vector(Index lbl);
 
-// apply d_relu to a vector.
-vector *v_d_relu(vector *v);
+double relu(double x);
 
-// Takes a vector *v and excecutes the relu function on each value in the vector and returns a new one.
-vector *v_relu(vector *v);
+double d_relu(double x);
+
+vector* vd_relu(vector* v);
+
+void update_bias(Layer_t* l, vector* offset, double rate);
+
+void update_weights(Layer_t* l, matrix* offset, double rate);
+
+double cross_entropy_loss(vector* pred, vector* real);
+
+double compute(Layer_t* l, Index cur, Layer_t* prev, double(*a)(double));
+
+void softmax(Layer_t* in);
+
+void compute_next(Layer_t* prev, Layer_t* cur, double(*activation1)(double));
+
+void forwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* output);
+
+void backwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* output, vector* real, double rate);
+
+Layer_t* lt_create(Index len, char weights, Index prev_len, vector* input);
 
 #endif

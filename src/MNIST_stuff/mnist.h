@@ -6,7 +6,7 @@
 
 uint32_t convert_to_32int(uint8_t *buff);
 
-double *get_image(char *path, int num);
+double* get_image(char *path, int num);
 
 int get_label(char *path, int num);
 

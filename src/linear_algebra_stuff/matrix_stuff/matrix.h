@@ -12,12 +12,6 @@ typedef struct _matrix
 
 void m_free(matrix *m);
 
-// Takes a matrix *m and returns a string containing the values of the matrix.
-char *m_to_string(matrix *m);
-
-// Takes a pointer to an array and it's size and returns a string containing the values of the array.
-char *r_to_string(double *row, int size);
-
 // Takes a matrix *m and returns the determinant of it.
 double m_det(matrix *m);
 
