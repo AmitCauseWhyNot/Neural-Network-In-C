@@ -24,7 +24,6 @@
 #define img_test_path "./src/data_stuff/t10k-images.idx3-ubyte"
 #define lbl_test_path "./src/data_stuff/t10k-labels.idx1-ubyte"
 
-
 double get_learning_rate(int epoch) 
 {
     if (epoch < 3) return INITIAL_LR;

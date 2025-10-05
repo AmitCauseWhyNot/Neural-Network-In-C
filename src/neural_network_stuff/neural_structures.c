@@ -161,81 +161,61 @@ void forwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* hidde
     compute_next(hidden3, output, NULL);
 }
 
-void backwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* hidden3, Layer_t* output, vector* real, double rate)
-{
+vector* compute_layer_delta(matrix* next_weights, vector* next_delta, vector* current_activations, vector* (*derivative_func)(vector*)) {
+    matrix* weights_T = m_transpose(next_weights);
+    vector* weights_delta = m_v_mult(weights_T, next_delta);
+    vector* activation_deriv = derivative_func(current_activations);
+    vector* layer_delta = H_product(weights_delta, activation_deriv);
+    
+    m_free(weights_T);
+    v_free(weights_delta);
+    v_free(activation_deriv);
+    
+    return layer_delta;
+}
+
+void update_layer(Layer_t* layer, vector* layer_delta, vector* prev_activations, double rate) {
+    matrix* weight_grad = v_vT_mult(layer_delta, prev_activations);
+    
+    update_weights(layer, weight_grad, rate);
+    update_bias(layer, layer_delta, rate);
+    
+    m_free(weight_grad);
+}
+
+void backwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* hidden3, Layer_t* output, vector* real, double rate) {
+    
     vector* predicted = get_values_vector(output);
     vector* hidden3_values = get_values_vector(hidden3);
     vector* hidden2_values = get_values_vector(hidden2);
     vector* hidden1_values = get_values_vector(hidden1);
     vector* input_values = get_values_vector(input);
 
-    // output layer update
+    // Output layer
     vector* out_delta = v_sub(predicted, real);
-    matrix* grad_hidden3_output = v_vT_mult(out_delta, hidden3_values);
-    update_bias(output, out_delta, rate);
-    update_weights(output, grad_hidden3_output, rate);
+    update_layer(output, out_delta, hidden3_values, rate);
     
-    // setup for hidden3 layer
-    matrix* out_weights_T = m_transpose(output->weights);
-    vector* out_weights_delta = m_v_mult(out_weights_T, out_delta);
-    vector* vd_relu_hid3 = vd_relu(hidden3_values);
-    vector* hid3_delta = H_product(out_weights_delta, vd_relu_hid3);
+    // Hidden3 layer
+    vector* hid3_delta = compute_layer_delta(output->weights, out_delta, hidden3_values, &vd_relu);
+    v_free(out_delta);
+    update_layer(hidden3, hid3_delta, hidden2_values, rate);
     
-    // hidden3 layer update
-    matrix* grad_hidden2_hidden3 = v_vT_mult(hid3_delta, hidden2_values);
-    update_bias(hidden3, hid3_delta, rate);
-    update_weights(hidden3, grad_hidden2_hidden3, rate);
-
-    // setup for hidden2 layer
-    matrix* hid3_weights_T = m_transpose(hidden3->weights);
-    vector* hid3_weights_delta = m_v_mult(hid3_weights_T, hid3_delta);
-    vector* vd_relu_hid2 = vd_relu(hidden2_values);
-    vector* hid2_delta = H_product(hid3_weights_delta, vd_relu_hid2);
+    // Hidden2 layer
+    vector* hid2_delta = compute_layer_delta(hidden3->weights, hid3_delta, hidden2_values, &vd_relu);
+    v_free(hid3_delta);
+    update_layer(hidden2, hid2_delta, hidden1_values, rate);
     
-    // hidden2 layer update
-    matrix* grad_hidden1_hidden2 = v_vT_mult(hid2_delta, hidden1_values);
-    update_bias(hidden2, hid2_delta, rate);
-    update_weights(hidden2, grad_hidden1_hidden2, rate);
+    // Hidden1 layer
+    vector* hid1_delta = compute_layer_delta(hidden2->weights, hid2_delta, hidden1_values, &vd_relu);
+    v_free(hid2_delta);
+    update_layer(hidden1, hid1_delta, input_values, rate);
+    v_free(hid1_delta);
 
-    // setup for hidden1 layer
-    matrix* hid2_weights_T = m_transpose(hidden2->weights);
-    vector* hid2_weights_delta = m_v_mult(hid2_weights_T, hid2_delta);
-    vector* vd_relu_hid1 = vd_relu(hidden1_values);
-    vector* hid1_delta = H_product(hid2_weights_delta, vd_relu_hid1);
-
-    // hidden1 layer update
-    matrix* grad_input_hidden1 = v_vT_mult(hid1_delta, input_values);
-    update_bias(hidden1, hid1_delta, rate);
-    update_weights(hidden1, grad_input_hidden1, rate);
-
-    // Free everything
     v_free(predicted);
     v_free(hidden3_values);
     v_free(hidden2_values);
     v_free(hidden1_values);
     v_free(input_values);
-    
-    v_free(out_weights_delta);
-    v_free(hid3_weights_delta);
-    v_free(hid2_weights_delta);
-    
-    v_free(vd_relu_hid3);
-    v_free(vd_relu_hid2);
-    v_free(vd_relu_hid1);
-    
-    v_free(out_delta);
-    v_free(hid3_delta);
-    v_free(hid2_delta);
-    v_free(hid1_delta);
-    
-    m_free(out_weights_T);
-    m_free(hid3_weights_T);
-    m_free(hid2_weights_T);
-
-    m_free(grad_hidden3_output);
-    m_free(grad_hidden2_hidden3);
-    m_free(grad_hidden1_hidden2);
-    m_free(grad_input_hidden1);
 }
 
 Layer_t* lt_create(Index len, char weights, Index prev_len, vector* input)
