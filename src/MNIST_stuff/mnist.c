@@ -65,6 +65,7 @@ double *get_image(char *path, int num)
         norm_image_buff[i] = image_buff[i] / 255.0;
     }
 
+    free(image_buff);
     return norm_image_buff;
 }
 

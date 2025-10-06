@@ -17,6 +17,7 @@ void l_free(Layer_t* l)
         n_free(l->neurons[i]);
     }
 
+    free(l->neurons);
     free(l);
 }
 
@@ -39,21 +40,21 @@ vector* get_label_vector(Index lbl)
     return r;
 }
 
-double relu(double x)
+double leaky(double x)
 {
-    return x > 0 ? x : 0;
+    return (x < 0) ? LEAKY * x : x;
 }
 
-double d_relu(double x) 
+double d_leaky(double x)
 {
-    return x > 0 ? 1.0 : 0;
+    return (x < 0) ? LEAKY : 1;
 }
 
-vector* vd_relu(vector* v)
+vector* vd_leaky(vector* v)
 {
     vector* r = v_create(v->length, NULL);
     for (Index i = 0; i < v->length; ++i)
-        r->values[i] = d_relu(v->values[i]);
+        r->values[i] = d_leaky(v->values[i]);
     return r;
 }
 
@@ -155,9 +156,9 @@ void compute_next(Layer_t* prev, Layer_t* cur, double(*activation1)(double))
 
 void forwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* hidden3, Layer_t* output)
 {
-    compute_next(input, hidden1, &relu);
-    compute_next(hidden1, hidden2, &relu);
-    compute_next(hidden2, hidden3, &relu);
+    compute_next(input, hidden1, &leaky);
+    compute_next(hidden1, hidden2, &leaky);
+    compute_next(hidden2, hidden3, &leaky);
     compute_next(hidden3, output, NULL);
 }
 
@@ -196,17 +197,17 @@ void backwards(Layer_t* input, Layer_t* hidden1, Layer_t* hidden2, Layer_t* hidd
     update_layer(output, out_delta, hidden3_values, rate);
     
     // Hidden3 layer
-    vector* hid3_delta = compute_layer_delta(output->weights, out_delta, hidden3_values, &vd_relu);
+    vector* hid3_delta = compute_layer_delta(output->weights, out_delta, hidden3_values, &vd_leaky);
     v_free(out_delta);
     update_layer(hidden3, hid3_delta, hidden2_values, rate);
     
     // Hidden2 layer
-    vector* hid2_delta = compute_layer_delta(hidden3->weights, hid3_delta, hidden2_values, &vd_relu);
+    vector* hid2_delta = compute_layer_delta(hidden3->weights, hid3_delta, hidden2_values, &vd_leaky);
     v_free(hid3_delta);
     update_layer(hidden2, hid2_delta, hidden1_values, rate);
     
     // Hidden1 layer
-    vector* hid1_delta = compute_layer_delta(hidden2->weights, hid2_delta, hidden1_values, &vd_relu);
+    vector* hid1_delta = compute_layer_delta(hidden2->weights, hid2_delta, hidden1_values, &vd_leaky);
     v_free(hid2_delta);
     update_layer(hidden1, hid1_delta, input_values, rate);
     v_free(hid1_delta);

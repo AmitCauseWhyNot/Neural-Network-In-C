@@ -211,7 +211,12 @@ matrix *m_get_sub(matrix *m, Index row, Index col)
 
 matrix *m_adj(matrix *m)
 {
-    matrix *m_return = m_create(m->Ncols, m->Nrows, m_transpose(m_cofactor(m))->values);
+    matrix* C = m_cofactor(m);
+    matrix* CT = m_transpose(C);
+    matrix *m_return = m_create(m->Ncols, m->Nrows, CT->values);
+
+    m_free(C);
+    m_free(CT);
     return m_return;
 }
 

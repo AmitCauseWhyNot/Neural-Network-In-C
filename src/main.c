@@ -12,9 +12,9 @@
 #define TRAIN_SAMPLES 60000
 #define IMG_LENGTH 784
 #define OUT_LENGTH 10
-#define HIDDEN1_LENGTH 256
+#define HIDDEN1_LENGTH 128
 #define HIDDEN2_LENGTH 128
-#define HIDDEN3_LENGTH 64
+#define HIDDEN3_LENGTH 128
 #define BATCH_SIZE 32          // Mini-batch size
 #define INITIAL_LR 0.01        // Initial learning rate
 #define TEST_COUNT 10000
@@ -198,6 +198,7 @@ int main() {
     v_free(img);
     l_free(hidden1);
     l_free(hidden2);
+    l_free(hidden3);
     l_free(output);
 
     return 0;

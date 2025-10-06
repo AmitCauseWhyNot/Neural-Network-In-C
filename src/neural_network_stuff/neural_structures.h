@@ -7,7 +7,7 @@
 #define OUT_LENGTH 10
 #define PI 3.141592653
 #define BASE_BIAS 1e-2
-#define MOMENTUM_COEF 0.9
+#define LEAKY 0.1
 #define max(x, y) (((x) >= (y)) ? (x) : (y))
 
 typedef struct _nt {
@@ -28,12 +28,6 @@ void l_free(Layer_t* l);
 vector* get_values_vector(Layer_t* l);
 
 vector* get_label_vector(Index lbl);
-
-double relu(double x);
-
-double d_relu(double x);
-
-vector* vd_relu(vector* v);
 
 void update_bias(Layer_t* l, vector* offset, double rate);
 
